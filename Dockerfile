@@ -82,13 +82,13 @@ RUN addgroup -S stubby && adduser -D -S stubby -G stubby
 RUN addgroup -S kea && adduser -D -S kea -G kea
 RUN mkdir -p /var/cache/stubby 
 RUN chown stubby:stubby /var/cache/stubby 
-RUN mkdir -p /usr/local/var/lib/kea/
-RUN chown kea:kea /usr/local/var/lib/kea
-RUN mkdir -p /usr/local/var/run/kea/
-RUN chown kea:kea /usr/local/var/run/kea
-RUN mkdir -p /usr/local/var/log/
-RUN touch /usr/local/var/log/kea-dhcp4.log && touch /usr/local/var/log/kea-dhcp6.log
-RUN chown kea:kea /usr/local/var/log/kea-dhcp4.log && chown kea:kea /usr/local/var/log/kea-dhcp6.log
+RUN mkdir -p /var/lib/kea/
+RUN chown kea:kea /var/lib/kea
+RUN mkdir -p /var/run/kea/
+RUN chown kea:kea /var/run/kea
+RUN mkdir -p /var/log/
+RUN touch /var/log/kea-dhcp4.log && touch /var/log/kea-dhcp6.log
+RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 
 
 ################################### S6 & FINALIZE ####################################
