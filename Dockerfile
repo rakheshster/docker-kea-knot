@@ -86,6 +86,7 @@ RUN mkdir -p /usr/local/var/lib/kea/
 RUN chown kea:kea /usr/local/var/lib/kea
 RUN mkdir -p /usr/local/var/run/kea/
 RUN chown kea:kea /usr/local/var/run/kea
+RUN mkdir -p /usr/local/var/log/
 RUN touch /usr/local/var/log/kea-dhcp4.log && touch /usr/local/var/log/kea-dhcp6.log
 RUN chown kea:kea /usr/local/var/log/kea-dhcp4.log && chown kea:kea /usr/local/var/log/kea-dhcp6.log
 
