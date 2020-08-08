@@ -54,17 +54,17 @@ LABEL maintainer="Rakhesh Sasidharan"
 
 # Get the build-dependencies for kea
 # https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements
-RUN apk add --update --no-cachegit build-base libtool openssl-dev boost-dev log4cplus-dev automake \
+RUN apk add --update --no-cache git build-base libtool openssl-dev boost-dev log4cplus-dev automake \
     && rm -rf /var/cache/apk/*
 
 # Download the source
-ADD https://downloads.isc.org/isc/kea/1.7.10/kea-{KEA_VERSION}.tar.gz  /tmp/
+ADD https://downloads.isc.org/isc/kea/1.7.10/kea-${KEA_VERSION}.tar.gz  /tmp/
 
 # Create a workdir called /src, extract the getdns source to that, build it
 # Cmake steps from https://lektor.getdnsapi.net/quick-start/cmake-quick-start/ (v 1.6.0)
 WORKDIR /src
-RUN tar xzf /tmp/kea-{KEA_VERSION}.tar.gz -C ./
-WORKDIR /src/kea-{KEA_VERSION}.tar.gz
+RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
+WORKDIR /src/kea-${KEA_VERSION}
 RUN ./configure --prefix=/usr/local --with-openssl
 RUN make && make install
 
