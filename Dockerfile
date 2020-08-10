@@ -16,8 +16,8 @@ RUN if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH}
     fi
 
 # Get the build-dependencies for everything I plan on building later
-# kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
 # common stuff: git build-base libtool xz cmake
+# kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
 # knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
 # knot resolver: (https://knot-resolver.readthedocs.io/en/latest/build.html) samurai luajit-dev libuv-dev gnutls-dev lmdb-dev 
 RUN apk add --update --no-cache \
@@ -61,9 +61,9 @@ WORKDIR /src/knot-${KNOTDNS_VERSION}
 RUN ./configure --prefix=/usr/local --enable-dnstap --disable-systemd
 RUN make && make install
 
-
 ################################## BUILD KNOT RESOLVER ####################################
-# This image is to only build Knot DNS
+# This image is to only build Knot Resolver
+# It builds upon the Knot DNS image as we need its libraries
 FROM alpineknotd AS alpineknotr
 
 ENV KNOTRESOLVER_VERSION 5.1.2
@@ -79,9 +79,10 @@ RUN meson build_dir --prefix=/usr/local
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
+# This image has all the runtime dependencies and nothing else. I also create the groups and assign folder permissions etc. 
 FROM alpine:latest AS alpineruntime
 
-# Runtimes deps for all
+# Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
 # Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv luajit lmdb gnutls
 RUN apk add --update --no-cache ca-certificates \
@@ -89,7 +90,6 @@ RUN apk add --update --no-cache ca-certificates \
     openssl log4cplus boost \
     libuv luajit lmdb gnutls
 RUN rm -rf /var/cache/apk/*
-RUN addgroup -S stubby && adduser -D -S stubby -G stubby
 RUN addgroup -S kea && adduser -D -S kea -G kea
 RUN mkdir -p /var/cache/stubby 
 RUN chown stubby:stubby /var/cache/stubby 
@@ -107,8 +107,8 @@ RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 # Create a new image based on alpinebound ...
 FROM alpineruntime
 
-# ... and copy the files from the alpinestubby & alpinekea images to the new image (so /usr/local/bin -> /bin etc.)
-COPY --from=alpinestubby /usr/local/ /
+# ... and copy the files from the alpineknotr & alpinekea images to the new image (so /usr/local/bin -> /bin etc.)
+COPY --from=alpineknotr /usr/local/ /
 COPY --from=alpinekea /usr/local/ /
 
 # I take the arch (for s6) as an argument. Options are amd64, x86, armhf (for Pi), arm, aarch64. See https://github.com/just-containers/s6-overlay#releases
