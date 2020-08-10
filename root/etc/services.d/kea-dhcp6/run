@@ -1,0 +1,5 @@
+#!/usr/bin/execlineb -P
+
+s6-setuidgid kea
+
+/bin/kea-dhcp6 -c /etc/kea-dhcp6.conf

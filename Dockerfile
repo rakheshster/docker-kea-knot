@@ -1,13 +1,11 @@
-################################### STUBBY ####################################
-# This image is to only build Stubby
-FROM alpine:latest AS alpinestubby
-
-ENV GETDNS_VERSION 1.6.0
-ENV STUBBY_VERSION 0.3.0
+################################### COMMON BUILDIMAGE ####################################
+# This image is to be a base where all the build dependencies are installed. 
+# I can use this in the subsequent stages to build Stubby, Kea, etc. 
+FROM alpine:latest AS alpinebuild
 
 # I realized that the build process doesn't remove this intermediate image automatically so best to LABEL it here and then prune later
 # Thanks to https://stackoverflow.com/a/55082473
-LABEL stage="alpinestubby"
+LABEL stage="alpinebuild"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # I need the arch later on when downloading s6. Rather than doing the check at that later stage, I introduce the ARG here itself so I can quickly validate and fail if needed.
@@ -19,46 +17,26 @@ RUN if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH}
 
 # Get the build-dependencies for stubby & getdns
 # See for the official list: https://github.com/getdnsapi/getdns#external-dependencies
+# Get the build-dependencies for Kea
+# https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements
 # https://pkgs.alpinelinux.org/packages is a good way to search for alpine packages. Note it uses wildcards
-RUN apk add --update --no-cache git build-base \ 
-    libtool openssl-dev \
+RUN apk add --update --no-cache git build-base libtool openssl-dev \
     unbound-dev yaml-dev \
+    boost-dev log4cplus-dev automake \
     cmake libidn2-dev libuv-dev libev-dev check-dev \
     && rm -rf /var/cache/apk/*
 
-# Download the source
-# Official recommendation (for example: https://github.com/getdnsapi/getdns/releases/tag/v1.6.0) is to get the tarball from getdns than from GitHub
-# Stubby is developed by the getdns team. libgetdns is a dependancy for Stubby, the getdns library provides all the core functionality for DNS resolution done by Stubby so it is important to build against the latest version of getdns.
-# When building getdns one can also build stubby alongwith
-ADD https://getdnsapi.net/dist/getdns-${GETDNS_VERSION}.tar.gz /tmp/
-
-# Create a workdir called /src, extract the getdns source to that, build it
-# Cmake steps from https://lektor.getdnsapi.net/quick-start/cmake-quick-start/ (v 1.6.0)
-WORKDIR /src
-RUN tar xzf /tmp/getdns-${GETDNS_VERSION}.tar.gz -C ./
-WORKDIR /src/getdns-${GETDNS_VERSION}/build
-RUN cmake -DBUILD_STUBBY=ON -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. && \
-    make && \
-    make install
-
 ################################## KEA DHCP ####################################
 # This image is to only build Kea Dhcp
-FROM alpine:latest AS alpinekea
+FROM alpinebuild AS alpinekea
 
 ENV KEA_VERSION 1.7.10
 
-# I realized that the build process doesn't remove this intermediate image automatically so best to LABEL it here and then prune later
-# Thanks to https://stackoverflow.com/a/55082473
 LABEL stage="alpinekea"
 LABEL maintainer="Rakhesh Sasidharan"
 
-# Get the build-dependencies for kea
-# https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements
-RUN apk add --update --no-cache git build-base libtool openssl-dev boost-dev log4cplus-dev automake \
-    && rm -rf /var/cache/apk/*
-
 # Download the source
-ADD https://downloads.isc.org/isc/kea/1.7.10/kea-${KEA_VERSION}.tar.gz  /tmp/
+ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz  /tmp/
 
 # Create a workdir called /src, extract the getdns source to that, build it
 # Cmake steps from https://lektor.getdnsapi.net/quick-start/cmake-quick-start/ (v 1.6.0)
@@ -67,6 +45,27 @@ RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
 WORKDIR /src/kea-${KEA_VERSION}
 RUN ./configure --prefix=/usr/local --with-openssl
 RUN make && make install
+
+################################## BIND KNOT DNS ####################################
+# This image is to only build Bind
+FROM alpinebuild AS alpineknot
+
+ENV KEA_VERSION 1.7.10
+
+LABEL stage="alpineknot"
+LABEL maintainer="Rakhesh Sasidharan"
+
+# Download the source
+ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz  /tmp/
+
+# Create a workdir called /src, extract the getdns source to that, build it
+# Cmake steps from https://lektor.getdnsapi.net/quick-start/cmake-quick-start/ (v 1.6.0)
+WORKDIR /src
+RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
+WORKDIR /src/kea-${KEA_VERSION}
+RUN ./configure --prefix=/usr/local --with-openssl
+RUN make && make install
+
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
 FROM alpine:latest AS alpineruntime
