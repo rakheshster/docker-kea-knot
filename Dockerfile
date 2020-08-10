@@ -1,6 +1,6 @@
 ################################### COMMON BUILDIMAGE ####################################
 # This image is to be a base where all the build dependencies are installed. 
-# I can use this in the subsequent stages to build Stubby, Kea, etc. 
+# I can use this in the subsequent stages to build stuff
 FROM alpine:latest AS alpinebuild
 
 # I realized that the build process doesn't remove this intermediate image automatically so best to LABEL it here and then prune later
@@ -15,16 +15,17 @@ RUN if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH}
     echo "Incorrect architecture specified! Must be one of amd64, x86, armhf (for Pi), arm, aarch64"; exit 1; \
     fi
 
-# Get the build-dependencies for stubby & getdns
-# See for the official list: https://github.com/getdnsapi/getdns#external-dependencies
-# Get the build-dependencies for Kea
-# https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements
-# https://pkgs.alpinelinux.org/packages is a good way to search for alpine packages. Note it uses wildcards
-RUN apk add --update --no-cache git build-base libtool openssl-dev \
-    unbound-dev yaml-dev \
-    boost-dev log4cplus-dev automake \
-    cmake libidn2-dev libuv-dev libev-dev check-dev \
-    && rm -rf /var/cache/apk/*
+# Get the build-dependencies for everything I plan on building later
+# kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
+# common stuff: git build-base libtool xz cmake
+# knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
+# knot resolver: (https://knot-resolver.readthedocs.io/en/latest/build.html) samurai luajit-dev libuv-dev gnutls-dev lmdb-dev 
+RUN apk add --update --no-cache \
+    git build-base libtool xz cmake \
+    openssl-dev boost-dev log4cplus-dev automake \
+    pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev \
+    samurai meson luajit-dev libuv-dev lmdb-dev
+RUN rm -rf /var/cache/apk/*
 
 ################################## KEA DHCP ####################################
 # This image is to only build Kea Dhcp
@@ -35,48 +36,59 @@ ENV KEA_VERSION 1.7.10
 LABEL stage="alpinekea"
 LABEL maintainer="Rakhesh Sasidharan"
 
-# Download the source
-ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz  /tmp/
-
-# Create a workdir called /src, extract the getdns source to that, build it
-# Cmake steps from https://lektor.getdnsapi.net/quick-start/cmake-quick-start/ (v 1.6.0)
+# Download the source & build it
+ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz /tmp/
 WORKDIR /src
 RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
 WORKDIR /src/kea-${KEA_VERSION}
 RUN ./configure --prefix=/usr/local --with-openssl
 RUN make && make install
 
-################################## BIND KNOT DNS ####################################
-# This image is to only build Bind
-FROM alpinebuild AS alpineknot
+################################## BUILD KNOT DNS ####################################
+# This image is to only build Knot DNS
+FROM alpinebuild AS alpineknotd
 
-ENV KEA_VERSION 1.7.10
+ENV KNOTDNS_VERSION 2.9.5
 
-LABEL stage="alpineknot"
+LABEL stage="alpineknotd"
 LABEL maintainer="Rakhesh Sasidharan"
 
-# Download the source
-ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz  /tmp/
-
-# Create a workdir called /src, extract the getdns source to that, build it
-# Cmake steps from https://lektor.getdnsapi.net/quick-start/cmake-quick-start/ (v 1.6.0)
+# Download the source & build it
+ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz /tmp/
 WORKDIR /src
-RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
-WORKDIR /src/kea-${KEA_VERSION}
-RUN ./configure --prefix=/usr/local --with-openssl
+RUN tar xf /tmp/knot-${KNOTDNS_VERSION}.tar.xz -C ./
+WORKDIR /src/knot-${KNOTDNS_VERSION}
+RUN ./configure --prefix=/usr/local --enable-dnstap --disable-systemd
 RUN make && make install
+
+
+################################## BUILD KNOT RESOLVER ####################################
+# This image is to only build Knot DNS
+FROM alpineknotd AS alpineknotr
+
+ENV KNOTRESOLVER_VERSION 5.1.2
+
+LABEL stage="alpineknotr"
+LABEL maintainer="Rakhesh Sasidharan"
+
+ADD https://secure.nic.cz/files/knot-resolver/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz /tmp/
+WORKDIR /src
+RUN tar xf /tmp/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz -C ./
+WORKDIR /src/knot-resolver-${KNOTRESOLVER_VERSION}
+RUN meson build_dir --prefix=/usr/local
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
 FROM alpine:latest AS alpineruntime
 
-# Deps for Stubby & Kea
-# Kea: https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software
-# Stubby: I found these by running stubby and seeing what it complained about
-RUN apk add --update --no-cache unbound ca-certificates \
-    unbound-libs yaml libidn2 \
+# Runtimes deps for all
+# Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
+# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv luajit lmdb gnutls
+RUN apk add --update --no-cache ca-certificates \
     drill \
-    openssl log4cplus boost
+    openssl log4cplus boost \
+    libuv luajit lmdb gnutls
+RUN rm -rf /var/cache/apk/*
 RUN addgroup -S stubby && adduser -D -S stubby -G stubby
 RUN addgroup -S kea && adduser -D -S kea -G kea
 RUN mkdir -p /var/cache/stubby 
