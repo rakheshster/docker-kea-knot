@@ -80,10 +80,13 @@ RUN ninja -C build_dir
 RUN DESTDIR=/usr/local ninja -C build_dir install
 
 # I figured the above options via trial and error. 
-# meson build_dir --prefix=/ tells it to look for stuff in /. this does not actually install in the / folder. 
+# `meson build_dir --prefix=/`  tells it to look for stuff in /. this does not actually install in the / folder. 
 # I also add --sysconfdir=etc to tell it to install stuff in the /etc folder. By default it ignores the --prefix, that's why I specify it manually. 
-# DESTDIR=/usr/local ninja -C build_dir install is what does the actual install. DESTDIR makes it install to /usr/local.
+# `DESTDIR=/usr/local ninja -C build_dir install` is what does the actual install. DESTDIR makes it install to /usr/local.
 # Later when I copy this to the runtime image all these become /usr/local/sbin -> /sbin etc. And this is where the --prefix kicks in coz all the programs expect the libraries to be at the prefix specified here, which is /.  
+
+# Copy the example file so there's a default config in place
+RUN cp /usr/local/share/doc/knot-resolver/examples/config.docker /usr/local/etc/knot-resolver/kresd.conf
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
