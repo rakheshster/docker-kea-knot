@@ -77,7 +77,7 @@ RUN tar xf /tmp/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-resolver-${KNOTRESOLVER_VERSION}
 RUN meson build_dir --prefix=/usr/local --default-library=static
 RUN ninja -C build_dir
-RUN ninja install -C build_dir
+RUN ninja -C build_dir install
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
