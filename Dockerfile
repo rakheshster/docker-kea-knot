@@ -91,8 +91,6 @@ RUN apk add --update --no-cache ca-certificates \
     libuv luajit lmdb gnutls
 RUN rm -rf /var/cache/apk/*
 RUN addgroup -S kea && adduser -D -S kea -G kea
-RUN mkdir -p /var/cache/stubby 
-RUN chown stubby:stubby /var/cache/stubby 
 RUN mkdir -p /var/lib/kea/
 RUN chown kea:kea /var/lib/kea
 RUN mkdir -p /var/run/kea/
