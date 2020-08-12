@@ -2,4 +2,4 @@
 
 s6-setuidgid kea
 
-/bin/kea-dhcp6 -c /etc/kea-dhcp6.conf
+/sbin/kea-dhcp6 -c /etc/kea-dhcp6.conf

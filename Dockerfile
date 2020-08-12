@@ -75,7 +75,9 @@ ADD https://secure.nic.cz/files/knot-resolver/knot-resolver-${KNOTRESOLVER_VERSI
 WORKDIR /src
 RUN tar xf /tmp/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-resolver-${KNOTRESOLVER_VERSION}
-RUN meson build_dir --prefix=/usr/local
+RUN meson build_dir --prefix=/usr/local --default-library=static
+RUN ninja -C build_dir
+RUN ninja install build_dir
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
@@ -84,11 +86,11 @@ FROM alpine:latest AS alpineruntime
 
 # Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
-# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv luajit lmdb gnutls
+# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv luajit lmdb gnutls userspace-rcu libedit libidn2
 RUN apk add --update --no-cache ca-certificates \
     drill \
     openssl log4cplus boost \
-    libuv luajit lmdb gnutls
+    libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c
 RUN rm -rf /var/cache/apk/*
 RUN addgroup -S kea && adduser -D -S kea -G kea
 RUN mkdir -p /var/lib/kea/
