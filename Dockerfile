@@ -75,9 +75,15 @@ ADD https://secure.nic.cz/files/knot-resolver/knot-resolver-${KNOTRESOLVER_VERSI
 WORKDIR /src
 RUN tar xf /tmp/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-resolver-${KNOTRESOLVER_VERSION}
-RUN meson build_dir --prefix=/usr/local --default-library=static
+RUN meson build_dir --prefix=/ --sysconfdir=etc
 RUN ninja -C build_dir
-RUN ninja -C build_dir install
+RUN DESTDIR=/usr/local ninja -C build_dir install
+
+# I figured the above options via trial and error. 
+# meson build_dir --prefix=/ tells it to look for stuff in /. this does not actually install in the / folder. 
+# I also add --sysconfdir=etc to tell it to install stuff in the /etc folder. By default it ignores the --prefix, that's why I specify it manually. 
+# DESTDIR=/usr/local ninja -C build_dir install is what does the actual install. DESTDIR makes it install to /usr/local.
+# Later when I copy this to the runtime image all these become /usr/local/sbin -> /sbin etc. And this is where the --prefix kicks in coz all the programs expect the libraries to be at the prefix specified here, which is /.  
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
@@ -92,6 +98,7 @@ RUN apk add --update --no-cache ca-certificates \
     openssl log4cplus boost \
     libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c
 RUN rm -rf /var/cache/apk/*
+
 RUN addgroup -S kea && adduser -D -S kea -G kea
 RUN mkdir -p /var/lib/kea/
 RUN chown kea:kea /var/lib/kea
@@ -101,6 +108,11 @@ RUN mkdir -p /var/log/
 RUN touch /var/log/kea-dhcp4.log && touch /var/log/kea-dhcp6.log
 RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 
+RUN addgroup -S knot-resolver && adduser -D -S knot-resolver -G knot-resolver
+RUN mkdir -p /var/lib/knot-resolver
+RUN mkdir -p /var/cache/knot-resolver
+RUN chown knot-resolver:knot-resolver /var/lib/knot-resolver
+RUN chown knot-resolver:knot-resolver /var/cache/knot-resolver
 
 ################################### S6 & FINALIZE ####################################
 # This pulls in Kea & Stubby, adds s6 and copies some files over
@@ -127,7 +139,7 @@ RUN tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
 # NOTE: s6 overlay doesn't support running as a different user, but I set the stubby service to run under user "stubby" in its service definition.
 # Similarly Unbound runs under its own user & group via the config file. 
 
-EXPOSE 8053/udp 53/udp 53/tcp
+EXPOSE 8053/udp 53/udp 53/tcp 443/tcp 853/tcp
 
 HEALTHCHECK --interval=5s --timeout=3s --start-period=5s \
     CMD drill @127.0.0.1 -p 8053 google.com || exit 1
