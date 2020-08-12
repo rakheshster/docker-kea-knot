@@ -19,12 +19,12 @@ RUN if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH}
 # common stuff: git build-base libtool xz cmake
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
 # knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
-# knot resolver: (https://knot-resolver.readthedocs.io/en/latest/build.html) samurai luajit-dev libuv-dev gnutls-dev lmdb-dev 
+# knot resolver: (https://knot-resolver.readthedocs.io/en/latest/build.html) samurai luajit-dev libuv-dev gnutls-dev lmdb-dev ninja
 RUN apk add --update --no-cache \
     git build-base libtool xz cmake \
     openssl-dev boost-dev log4cplus-dev automake \
     pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev \
-    samurai meson luajit-dev libuv-dev lmdb-dev
+    samurai meson luajit-dev libuv-dev lmdb-dev ninja
 RUN rm -rf /var/cache/apk/*
 
 ################################## KEA DHCP ####################################
@@ -77,7 +77,7 @@ RUN tar xf /tmp/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-resolver-${KNOTRESOLVER_VERSION}
 RUN meson build_dir --prefix=/usr/local --default-library=static
 RUN ninja -C build_dir
-RUN ninja install build_dir
+RUN ninja install -C build_dir
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
