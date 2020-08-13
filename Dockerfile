@@ -61,6 +61,10 @@ WORKDIR /src/knot-${KNOTDNS_VERSION}
 RUN ./configure --prefix=/usr/local --enable-dnstap --disable-systemd
 RUN make && make install
 
+# Copy the example config so there's a default in place. Fix the path names in the process. 
+# Note: /var/lib/knot is where the zones will be stored. I'll mount this later in Docker. 
+RUN sed 's|/usr/local||g' /usr/local/etc/knot/knot.sample.conf > /usr/local/etc/knot/knot.conf
+
 ################################## BUILD KNOT RESOLVER ####################################
 # This image is to only build Knot Resolver
 # It builds upon the Knot DNS image as we need its libraries
@@ -111,11 +115,15 @@ RUN mkdir -p /var/log/
 RUN touch /var/log/kea-dhcp4.log && touch /var/log/kea-dhcp6.log
 RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 
-RUN addgroup -S knot-resolver && adduser -D -S knot-resolver -G knot-resolver
+RUN addgroup -S knot-dns && adduser -D -S knot-dns -G knot-dns
+RUN mkdir -p /var/lib/knot
+RUN chown knot-dns:knot-dns /var/lib/knot
+
+RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
 RUN mkdir -p /var/lib/knot-resolver
 RUN mkdir -p /var/cache/knot-resolver
-RUN chown knot-resolver:knot-resolver /var/lib/knot-resolver
-RUN chown knot-resolver:knot-resolver /var/cache/knot-resolver
+RUN chown knot-res:knot-res /var/lib/knot-resolver
+RUN chown knot-res:knot-res /var/cache/knot-resolver
 
 ################################### S6 & FINALIZE ####################################
 # This pulls in Kea & Stubby, adds s6 and copies some files over
