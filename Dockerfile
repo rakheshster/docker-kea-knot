@@ -64,6 +64,8 @@ RUN make && make install
 # Copy the example config so there's a default in place. Fix the path names in the process. 
 # Note: /var/lib/knot is where the zones will be stored. I'll mount this later in Docker. 
 RUN sed 's|/usr/local||g' /usr/local/etc/knot/knot.sample.conf > /usr/local/etc/knot/knot.conf
+RUN mkdir -p /usr/local/var/lib/knot/zones
+RUN cp /usr/local/etc/knot/example.com.zone /usr/local/var/lib/knot/zones
 
 ################################## BUILD KNOT RESOLVER ####################################
 # This image is to only build Knot Resolver
@@ -115,9 +117,9 @@ RUN mkdir -p /var/log/
 RUN touch /var/log/kea-dhcp4.log && touch /var/log/kea-dhcp6.log
 RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 
-RUN addgroup -S knot-dns && adduser -D -S knot-dns -G knot-dns
+RUN addgroup -S knot && adduser -D -S knot -G knot
 RUN mkdir -p /var/lib/knot
-RUN chown knot-dns:knot-dns /var/lib/knot
+RUN chown knot:knot /var/lib/knot
 
 RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
 RUN mkdir -p /var/lib/knot-resolver
