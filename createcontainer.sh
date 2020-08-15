@@ -21,7 +21,7 @@ fi
 # Knot needs ...
 # Config dir /etc/knot
 KNOT_CONFIG=${NAME}_knotconfig && docker volume create $KNOT_CONFIG
-# Database dir /var/lib/knot
+# Database dir /var/lib/knot/zones
 KNOT_DB=${NAME}_knotdb && docker volume create $KNOT_DB
 
 # Knot Resolver needs ...
@@ -52,7 +52,7 @@ if [[ -z "$3" ]]; then
         --restart=unless-stopped \
         --cap-add=NET_ADMIN \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
-        --mount type=volume,source=$KNOT_DB,target=/var/lib/knot \
+        --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         "$IMAGE"
@@ -62,7 +62,7 @@ else
         --restart=unless-stopped \
         --cap-add=NET_ADMIN \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
-        --mount type=volume,source=$KNOT_DB,target=/var/lib/knot \
+        --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         "$IMAGE"

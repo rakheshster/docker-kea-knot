@@ -41,8 +41,9 @@ ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz /
 WORKDIR /src
 RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
 WORKDIR /src/kea-${KEA_VERSION}
-RUN ./configure --prefix=/usr/local --with-openssl
-RUN make && make install
+# Configure kea to expect everything in / (--prefix=/) but when installing put everything into /usr/local (via DESTDIR=) (I copy the contents of this to / in the final image)
+RUN ./configure --prefix=/ --with-openssl
+RUN make && DESTDIR=/usr/local make install
 
 ################################## BUILD KNOT DNS ####################################
 # This image is to only build Knot DNS
@@ -58,14 +59,15 @@ ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz /tmp/
 WORKDIR /src
 RUN tar xf /tmp/knot-${KNOTDNS_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-${KNOTDNS_VERSION}
-RUN ./configure --prefix=/usr/local --enable-dnstap --disable-systemd
-RUN make && make install
+# Configure knot to expect everything in / (--prefix=/) but when installing put everything into /usr/local (via DESTDIR=) (I copy the contents of this to / in the final image)
+RUN ./configure --prefix=/ --enable-dnstap --disable-systemd
+RUN make && DESTDIR=/usr/local make install
 
-# Copy the example config so there's a default in place. Fix the path names in the process. 
-# Note: /var/lib/knot is where the zones will be stored. I'll mount this later in Docker. 
-RUN sed 's|/usr/local||g' /usr/local/etc/knot/knot.sample.conf > /usr/local/etc/knot/knot.conf
-RUN mkdir -p /usr/local/var/lib/knot/zones
-RUN cp /usr/local/etc/knot/example.com.zone /usr/local/var/lib/knot/zones
+# Copy the example config so there's a default in place. Remove the // in the paths (coz of the --prefix=/ earlier) as it irritates me :)
+RUN sed 's|//|/|g' /usr/local/etc/knot/knot.sample.conf > /usr/local/etc/knot/knot.conf 
+
+# Note: /var/lib/knot/zones is where the zones will be stored. I'll mount this later in Docker. 
+RUN mkdir -p /usr/local/var/lib/knot/zones && cp /usr/local/etc/knot/example.com.zone /usr/local/var/lib/knot/zones
 
 ################################## BUILD KNOT RESOLVER ####################################
 # This image is to only build Knot Resolver
@@ -96,7 +98,8 @@ RUN cp /usr/local/share/doc/knot-resolver/examples/config.docker /usr/local/etc/
 
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
-# This image has all the runtime dependencies and nothing else. I also create the groups and assign folder permissions etc. 
+# This image has all the runtime dependencies, the built files from the previous stage, and I also create the groups and assign folder permissions etc. 
+# I got to create the folder after copying the stuff from previous stage so the permissions don't get overwritten
 FROM alpine:latest AS alpineruntime
 
 # Get the runtimes deps for all
@@ -108,33 +111,28 @@ RUN apk add --update --no-cache ca-certificates \
     libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c
 RUN rm -rf /var/cache/apk/*
 
+# /usr/local/bin -> /bin etc.
+COPY --from=alpineknotr /usr/local/ /
+COPY --from=alpinekea /usr/local/ /
+
 RUN addgroup -S kea && adduser -D -S kea -G kea
-RUN mkdir -p /var/lib/kea/
-RUN chown kea:kea /var/lib/kea
-RUN mkdir -p /var/run/kea/
-RUN chown kea:kea /var/run/kea
+RUN mkdir -p /var/lib/kea/ && chown kea:kea /var/lib/kea
+RUN mkdir -p /var/run/kea/ && chown kea:kea /var/run/kea
 RUN mkdir -p /var/log/
 RUN touch /var/log/kea-dhcp4.log && touch /var/log/kea-dhcp6.log
 RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 
 RUN addgroup -S knot && adduser -D -S knot -G knot
-RUN mkdir -p /var/lib/knot
-RUN chown knot:knot /var/lib/knot
+RUN mkdir -p /var/lib/knot && chown knot:knot /var/lib/knot
+RUN mkdir -p /var/run/knot && chown knot:knot /var/run/knot
 
 RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
-RUN mkdir -p /var/lib/knot-resolver
-RUN mkdir -p /var/cache/knot-resolver
-RUN chown knot-res:knot-res /var/lib/knot-resolver
-RUN chown knot-res:knot-res /var/cache/knot-resolver
+RUN mkdir -p /var/lib/knot-resolver && chown knot-res:knot-res /var/lib/knot-resolver
+RUN mkdir -p /var/cache/knot-resolver && chown knot-res:knot-res /var/cache/knot-resolver
 
 ################################### S6 & FINALIZE ####################################
-# This pulls in Kea & Stubby, adds s6 and copies some files over
-# Create a new image based on alpinebound ...
+# This pulls in the previous stage, adds S6. This is my final stage. 
 FROM alpineruntime
-
-# ... and copy the files from the alpineknotr & alpinekea images to the new image (so /usr/local/bin -> /bin etc.)
-COPY --from=alpineknotr /usr/local/ /
-COPY --from=alpinekea /usr/local/ /
 
 # I take the arch (for s6) as an argument. Options are amd64, x86, armhf (for Pi), arm, aarch64. See https://github.com/just-containers/s6-overlay#releases
 ARG ARCH=armhf 
