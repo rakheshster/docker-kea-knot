@@ -118,9 +118,6 @@ COPY --from=alpinekea /usr/local/ /
 RUN addgroup -S kea && adduser -D -S kea -G kea
 RUN mkdir -p /var/lib/kea/ && chown kea:kea /var/lib/kea
 RUN mkdir -p /var/run/kea/ && chown kea:kea /var/run/kea
-RUN mkdir -p /var/log/
-RUN touch /var/log/kea-dhcp4.log && touch /var/log/kea-dhcp6.log
-RUN chown kea:kea /var/log/kea-dhcp4.log && chown kea:kea /var/log/kea-dhcp6.log
 
 RUN addgroup -S knot && adduser -D -S knot -G knot
 RUN mkdir -p /var/lib/knot && chown knot:knot /var/lib/knot
