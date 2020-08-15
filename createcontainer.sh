@@ -49,6 +49,7 @@ IP=$3
 if [[ -z "$3" ]]; then
     docker create --name "$NAME" \
         -P --network="$NETWORK" \
+        --dns 127.0.0.1
         --restart=unless-stopped \
         --cap-add=NET_ADMIN \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
@@ -59,6 +60,7 @@ if [[ -z "$3" ]]; then
 else
     docker create --name "$NAME" \
         -P --network="$NETWORK" --ip=$IP \
+        --dns 127.0.0.1
         --restart=unless-stopped \
         --cap-add=NET_ADMIN \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
