@@ -69,10 +69,9 @@ else
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         "$IMAGE"
 fi
-# Note that the container already has a /etc/dnsmasq.d folder which contains files copied in during the image build.
+# Note that the container already has /etc/knot et al. folders which contains files copied in during the image build.
 # When I create the docker volume above and map it to the container, if this volume is empty the files from within the container are copied over to it.
 # Subsequently the files from the volume are used in preference to the files in the image. 
-# Ditto for /etc/stubby. 
 
 # quit if the above step gave any error
 [[ $? -ne 0 ]] && exit 1
