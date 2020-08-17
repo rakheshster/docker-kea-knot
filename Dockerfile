@@ -47,7 +47,7 @@ RUN make && DESTDIR=/usr/local make install
 
 # Disable keactrl as its broken under alpine (ps -p does not work) and also it conflicts with s6 if I try to stop etc. 
 # The only thing I need keactrl for is to reload the config, for that use the included kea-dhcpx-reload script which I provide.
-RUN chmod -x /sbin/keactrl
+RUN chmod -x /usr/local/sbin/keactrl
 
 ################################## BUILD KNOT DNS ####################################
 # This image is to only build Knot DNS
