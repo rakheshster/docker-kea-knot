@@ -45,9 +45,9 @@ WORKDIR /src/kea-${KEA_VERSION}
 RUN ./configure --prefix=/ --with-openssl
 RUN make && DESTDIR=/usr/local make install
 
-# fix keactrl as its broken under alpine (ps -p does not work)
-RUN cp /sbin/keactrl /sbin/keactrl.orig
-RUN sed 's/ps -p ${_pid}/ps | grep ${_pid} | grep -v grep/g' /sbin/keactrl > /sbin/keactrl
+# Disable keactrl as its broken under alpine (ps -p does not work) and also it conflicts with s6 if I try to stop etc. 
+# The only thing I need keactrl for is to reload the config, for that use the included kea-dhcpx-reload script which I provide.
+RUN chmod -x /sbin/keactrl
 
 ################################## BUILD KNOT DNS ####################################
 # This image is to only build Knot DNS

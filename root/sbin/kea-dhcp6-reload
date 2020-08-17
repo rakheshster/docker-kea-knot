@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# send a SIGHUP to the supervised process
+s6-svc -h /var/run/s6/services/kea-dhcp6
