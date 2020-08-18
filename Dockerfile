@@ -119,12 +119,8 @@ RUN rm -rf /var/cache/apk/*
 COPY --from=alpineknotr /usr/local/ /
 COPY --from=alpinekea /usr/local/ /
 
-RUN addgroup -S kea && adduser -D -S kea -G kea
-RUN mkdir -p /var/lib/kea/ && chown kea:kea /var/lib/kea
-RUN mkdir -p /var/run/kea/ && chown kea:kea /var/run/kea
-
 RUN addgroup -S knot && adduser -D -S knot -G knot
-RUN mkdir -p /var/lib/knot && chown knot:knot /var/lib/knot
+RUN mkdir -p /var/lib/knot/zones && chown knot:knot /var/lib/knot
 RUN mkdir -p /var/run/knot && chown knot:knot /var/run/knot
 
 RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
