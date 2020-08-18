@@ -32,6 +32,8 @@ KNOTR_CONFIG=${NAME}_knot-res-config && docker volume create $KNOTR_CONFIG
 # Config dir /etc/kea
 KEA_CONFIG=${NAME}_keaconfig && docker volume create $KEA_CONFIG
 
+KEA_LEASES=${NAME}_kealeases $$ docker volume create $KEA_LEASES
+
 # Networking stuff
 if [[ -z "$4" ]]; then 
     # network name not specified, default to bridge
@@ -57,6 +59,7 @@ if [[ -z "$3" ]]; then
         --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
+        --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
         "$IMAGE"
 else
     docker create --name "$NAME" \
@@ -69,6 +72,7 @@ else
         --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
+        --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
         "$IMAGE"
 fi
 # Note that the container already has /etc/knot et al. folders which contains files copied in during the image build.
