@@ -52,6 +52,7 @@ if [[ -z "$3" ]]; then
         --dns 127.0.0.1 \
         --restart=unless-stopped \
         --cap-add=NET_ADMIN \
+        -e TZ="Europe/London" \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
         --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
@@ -63,6 +64,7 @@ else
         --dns 127.0.0.1 \
         --restart=unless-stopped \
         --cap-add=NET_ADMIN \
+        -e TZ="Europe/London" \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
         --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
