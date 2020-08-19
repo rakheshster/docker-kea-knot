@@ -32,7 +32,7 @@ KNOTR_CONFIG=${NAME}_knot-res-config && docker volume create $KNOTR_CONFIG
 # Config dir /etc/kea
 KEA_CONFIG=${NAME}_keaconfig && docker volume create $KEA_CONFIG
 
-KEA_LEASES=${NAME}_kealeases $$ docker volume create $KEA_LEASES
+KEA_LEASES=${NAME}_kealeases && docker volume create $KEA_LEASES
 
 # Networking stuff
 if [[ -z "$4" ]]; then 
