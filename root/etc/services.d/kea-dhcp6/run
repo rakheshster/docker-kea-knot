@@ -1,6 +1,5 @@
 #!/usr/bin/execlineb -P
 
-# this fails
-# s6-setuidgid kea
+# Since the DHCPv6 server opens privileged ports, it requires root access. This daemon must be run as root.
 
 /sbin/kea-dhcp6 -c /etc/kea/kea-dhcp6.conf
