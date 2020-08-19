@@ -20,7 +20,7 @@ fi
 # Create Docker volumes for storing data. This is automatically named after the container plus a suffix. 
 # Knot needs (1) Config dir /etc/knot (2) a place to store zones (these could get dynamically updated based on DNSSEC or DDNS)
 KNOT_CONFIG=${NAME}_knotconfig && docker volume create $KNOT_CONFIG
-KNOT_ZONES==${NAME}_knotzones && docker volume create $KNOT_ZONES
+KNOT_ZONES=${NAME}_knotzones && docker volume create $KNOT_ZONES
 
 # Knot Resolver needs (3) Config dir /etc/knot-resolver
 KNOTR_CONFIG=${NAME}_knotresconfig && docker volume create $KNOTR_CONFIG
