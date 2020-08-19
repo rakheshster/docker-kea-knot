@@ -1,2 +1,2 @@
 /etc/knot true root:root 0644 0755
-/etc/knot/zones true knot:knot 0644 0755
+/var/lib/knot/zones true knot:knot 0644 0755
