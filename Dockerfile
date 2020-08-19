@@ -67,12 +67,6 @@ WORKDIR /src/knot-${KNOTDNS_VERSION}
 RUN ./configure --prefix=/ --enable-dnstap --disable-systemd
 RUN make && DESTDIR=/usr/local make install
 
-# Copy the example config so there's a default in place. Remove the // in the paths (coz of the --prefix=/ earlier) as it irritates me :)
-RUN sed 's|//|/|g' /usr/local/etc/knot/knot.sample.conf > /usr/local/etc/knot/knot.conf 
-
-# Note: /var/lib/knot/zones is where the zones will be stored. I'll mount this later in Docker. 
-RUN mkdir -p /usr/local/var/lib/knot/zones && cp /usr/local/etc/knot/example.com.zone /usr/local/var/lib/knot/zones
-
 ################################## BUILD KNOT RESOLVER ####################################
 # This image is to only build Knot Resolver
 # It builds upon the Knot DNS image as we need its libraries
@@ -97,9 +91,6 @@ RUN DESTDIR=/usr/local ninja -C build_dir install
 # `DESTDIR=/usr/local ninja -C build_dir install` is what does the actual install. DESTDIR makes it install to /usr/local.
 # Later when I copy this to the runtime image all these become /usr/local/sbin -> /sbin etc. And this is where the --prefix kicks in coz all the programs expect the libraries to be at the prefix specified here, which is /.  
 
-# Copy the example file so there's a default config in place
-RUN cp /usr/local/share/doc/knot-resolver/examples/config.docker /usr/local/etc/knot-resolver/kresd.conf
-
 
 ################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
 # This image has all the runtime dependencies, the built files from the previous stage, and I also create the groups and assign folder permissions etc. 
@@ -120,7 +111,7 @@ COPY --from=alpineknotr /usr/local/ /
 COPY --from=alpinekea /usr/local/ /
 
 RUN addgroup -S knot && adduser -D -S knot -G knot
-RUN mkdir -p /var/lib/knot/zones && chown knot:knot /var/lib/knot
+RUN mkdir -p /var/lib/knot && chown knot:knot /var/lib/knot
 RUN mkdir -p /var/run/knot && chown knot:knot /var/run/knot
 
 RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
