@@ -18,20 +18,14 @@ else
 fi
 
 # Create Docker volumes for storing data. This is automatically named after the container plus a suffix. 
-# Knot needs ...
-# Config dir /etc/knot
+# Knot needs ... Config dir /etc/knot
 KNOT_CONFIG=${NAME}_knotconfig && docker volume create $KNOT_CONFIG
-# Database dir /var/lib/knot/zones
-KNOT_DB=${NAME}_knotdb && docker volume create $KNOT_DB
 
-# Knot Resolver needs ...
-# Config dir /etc/knot-resolver
-KNOTR_CONFIG=${NAME}_knot-res-config && docker volume create $KNOTR_CONFIG
+# Knot Resolver needs ... Config dir /etc/knot-resolver
+KNOTR_CONFIG=${NAME}_knotresconfig && docker volume create $KNOTR_CONFIG
 
-# Kea needs ...
-# Config dir /etc/kea
+# Kea needs ... Config dir /etc/kea (and lets also save the leases in a volume)
 KEA_CONFIG=${NAME}_keaconfig && docker volume create $KEA_CONFIG
-
 KEA_LEASES=${NAME}_kealeases && docker volume create $KEA_LEASES
 
 # Networking stuff
@@ -56,7 +50,6 @@ if [[ -z "$3" ]]; then
         --cap-add=NET_ADMIN \
         -e TZ="Europe/London" \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
-        --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
@@ -69,7 +62,6 @@ else
         --cap-add=NET_ADMIN \
         -e TZ="Europe/London" \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
-        --mount type=volume,source=$KNOT_DB,target=/var/lib/knot/zones \
         --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
