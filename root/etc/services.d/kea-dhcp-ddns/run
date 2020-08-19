@@ -3,4 +3,4 @@
 # this fails
 # s6-setuidgid kea
 
-/sbin/kea-dhcp-ddns -c /etc/kea/kea-dhcp-dns.conf
+/sbin/kea-dhcp-ddns -c /etc/kea/kea-dhcp-ddns.conf
