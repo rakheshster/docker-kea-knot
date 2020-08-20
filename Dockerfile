@@ -103,7 +103,8 @@ FROM alpine:latest AS alpineruntime
 RUN apk add --update --no-cache ca-certificates \
     drill \
     openssl log4cplus boost \
-    libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c
+    libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c \
+    nano
 RUN rm -rf /var/cache/apk/*
 
 # /usr/local/bin -> /bin etc.
@@ -139,8 +140,9 @@ RUN tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
 # Similarly Unbound runs under its own user & group via the config file. 
 
 EXPOSE 8053/udp 8053/tcp 53/udp 53/tcp 443/tcp 853/tcp 8080/tcp
-# Knot DNS runs on 8053. Knot Resolver on 53. Kea requires 8080 for HA
-# Not sure why I am exposing 853. Remove later if I can't figure out. 
+# Knot DNS runs on 8053. 
+# Knot Resolver runs on 53 (dns), 853 (dot), 443 (doh), 6453 (webmgmt). 
+# Kea requires 8080 for HA
 
 # HEALTHCHECK --interval=5s --timeout=3s --start-period=5s \
 #     CMD drill @127.0.0.1 -p 8053 google.com || exit 1
