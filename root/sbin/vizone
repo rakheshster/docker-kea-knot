@@ -8,8 +8,25 @@ fi
 ZONE=$1
 
 # https://www.knot-dns.cz/docs/2.8/singlehtml/#reading-and-editing-the-zone-file-safely
-knotc -b zone-freeze $ZONE && knotc -b zone-flush $ZONE
+# Temporarily postpone automatic zone-changing events and flush zone journal into the zone file.
+/sbin/knotc -b zone-freeze $ZONE && \
+    /sbin/knotc -b zone-flush $ZONE
 
+# Make a backup of the existing zone and open the zone file in nano (yes, nano!)
+cp "/var/lib/knot/zones/${ZONE}.zone" "/var/lib/knot/zones/${ZONE}.zonebkp"
 nano -w "/var/lib/knot/zones/${ZONE}.zone"
 
-knotc -b zone-reload $ZONE && knotc zone-thaw $ZONE
+# Do a validation of the new zone
+if /sbin/knotc zone-check $ZONE ; then
+    echo "New zone has passed validation checks."
+    rm -f "/var/lib/knot/zones/${ZONE}.zonebkp"
+else 
+    echo "New zone file fails validation checks. Reverting to previous version. The broken zone is saved as /var/lib/knot/zones/${ZONE}.zonebroken in the container."
+    cp "/var/lib/knot/zones/${ZONE}.zone" "/var/lib/knot/zones/${ZONE}.zonebroken"
+    mv "/var/lib/knot/zones/${ZONE}.zonebkp" "/var/lib/knot/zones/${ZONE}.zone"
+fi
+
+# Reload the zone from disk, dismiss the zone free, and flush zone journal into the zone file.
+/sbin/knotc -b zone-reload $ZONE && \
+/sbin/knotc zone-thaw $ZONE && \
+/sbin/knotc -b zone-flush $ZONE
