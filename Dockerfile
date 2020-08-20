@@ -19,12 +19,10 @@ RUN if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH}
 # common stuff: git build-base libtool xz cmake
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
 # knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
-# knot resolver: (https://knot-resolver.readthedocs.io/en/latest/build.html) samurai luajit-dev libuv-dev gnutls-dev lmdb-dev ninja
 RUN apk add --update --no-cache \
     git build-base libtool xz cmake \
     openssl-dev boost-dev log4cplus-dev automake \
-    pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev \
-    samurai meson luajit-dev libuv-dev lmdb-dev ninja
+    pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
 RUN rm -rf /var/cache/apk/*
 
 ################################## KEA DHCP ####################################
@@ -51,11 +49,11 @@ RUN chmod -x /usr/local/sbin/keactrl
 
 ################################## BUILD KNOT DNS ####################################
 # This image is to only build Knot DNS
-FROM alpinebuild AS alpineknotd
+FROM alpinebuild AS alpineknot
 
 ENV KNOTDNS_VERSION 2.9.5
 
-LABEL stage="alpineknotd"
+LABEL stage="alpineknot"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Download the source & build it
@@ -67,32 +65,8 @@ WORKDIR /src/knot-${KNOTDNS_VERSION}
 RUN ./configure --prefix=/ --enable-dnstap --disable-systemd
 RUN make && DESTDIR=/usr/local make install
 
-################################## BUILD KNOT RESOLVER ####################################
-# This image is to only build Knot Resolver
-# It builds upon the Knot DNS image as we need its libraries
-FROM alpineknotd AS alpineknotr
 
-ENV KNOTRESOLVER_VERSION 5.1.2
-
-LABEL stage="alpineknotr"
-LABEL maintainer="Rakhesh Sasidharan"
-
-ADD https://secure.nic.cz/files/knot-resolver/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz /tmp/
-WORKDIR /src
-RUN tar xf /tmp/knot-resolver-${KNOTRESOLVER_VERSION}.tar.xz -C ./
-WORKDIR /src/knot-resolver-${KNOTRESOLVER_VERSION}
-RUN meson build_dir --prefix=/ --sysconfdir=etc
-RUN ninja -C build_dir
-RUN DESTDIR=/usr/local ninja -C build_dir install
-
-# I figured the above options via trial and error. 
-# `meson build_dir --prefix=/`  tells it to look for stuff in /. this does not actually install in the / folder. 
-# I also add --sysconfdir=etc to tell it to install stuff in the /etc folder. By default it ignores the --prefix, that's why I specify it manually. 
-# `DESTDIR=/usr/local ninja -C build_dir install` is what does the actual install. DESTDIR makes it install to /usr/local.
-# Later when I copy this to the runtime image all these become /usr/local/sbin -> /sbin etc. And this is where the --prefix kicks in coz all the programs expect the libraries to be at the prefix specified here, which is /.  
-
-
-################################### RUNTIME ENVIRONMENT FOR KEA & STUBBY ####################################
+################################### RUNTIME ENVIRONMENT FOR KEA & KNOT ####################################
 # This image has all the runtime dependencies, the built files from the previous stage, and I also create the groups and assign folder permissions etc. 
 # I got to create the folder after copying the stuff from previous stage so the permissions don't get overwritten
 FROM alpine:latest AS alpineruntime
@@ -108,7 +82,7 @@ RUN apk add --update --no-cache ca-certificates \
 RUN rm -rf /var/cache/apk/*
 
 # /usr/local/bin -> /bin etc.
-COPY --from=alpineknotr /usr/local/ /
+COPY --from=alpineknot /usr/local/ /
 COPY --from=alpinekea /usr/local/ /
 
 RUN addgroup -S knot && adduser -D -S knot -G knot
@@ -139,9 +113,8 @@ RUN tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
 # NOTE: s6 overlay doesn't support running as a different user, but I set the stubby service to run under user "stubby" in its service definition.
 # Similarly Unbound runs under its own user & group via the config file. 
 
-EXPOSE 8053/udp 8053/tcp 53/udp 53/tcp 443/tcp 853/tcp 8080/tcp
+EXPOSE 8053/udp 8053/tcp 8080/tcp
 # Knot DNS runs on 8053. 
-# Knot Resolver runs on 53 (dns), 853 (dot), 443 (doh), 6453 (webmgmt). 
 # Kea requires 8080 for HA
 
 # HEALTHCHECK --interval=5s --timeout=3s --start-period=5s \
