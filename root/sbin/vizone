@@ -7,7 +7,9 @@ fi
 
 ZONE=$1
 
+# https://www.knot-dns.cz/docs/2.8/singlehtml/#reading-and-editing-the-zone-file-safely
 knotc -b zone-freeze $ZONE && knotc -b zone-flush $ZONE
+
 nano -w "/var/lib/knot/zones/${ZONE}.zone"
-knotc -b zone-reload $ZONE
-knotc zone-thaw $ZONE
+
+knotc -b zone-reload $ZONE && knotc zone-thaw $ZONE
