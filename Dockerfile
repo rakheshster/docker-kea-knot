@@ -113,11 +113,11 @@ RUN tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
 # NOTE: s6 overlay doesn't support running as a different user, but I set the stubby service to run under user "stubby" in its service definition.
 # Similarly Unbound runs under its own user & group via the config file. 
 
-EXPOSE 8053/udp 8053/tcp 8080/tcp
-# Knot DNS runs on 8053. 
+EXPOSE 53/udp 53/tcp 8080/tcp
+# Knot DNS runs on 53. 
 # Kea requires 8080 for HA
 
 # HEALTHCHECK --interval=5s --timeout=3s --start-period=5s \
-#     CMD drill @127.0.0.1 -p 8053 google.com || exit 1
+#     CMD drill @127.0.0.1 -p 53 google.com || exit 1
 
 ENTRYPOINT ["/init"]
