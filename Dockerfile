@@ -17,6 +17,8 @@ RUN apk add --update --no-cache \
     openssl-dev boost-dev log4cplus-dev automake \
     pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
 RUN rm -rf /var/cache/apk/*
+# This causes issues with buildx as /var/run is a symlink to /run in alpine. So I'll delete it.
+RUN rm -f /var/run
 
 ################################## KEA DHCP ####################################
 # This image is to only build Kea Dhcp
@@ -62,7 +64,7 @@ RUN make && DESTDIR=/usr/local make install
 ################################### RUNTIME ENVIRONMENT FOR KEA & KNOT ####################################
 # This image has all the runtime dependencies, the built files from the previous stage, and I also create the groups and assign folder permissions etc. 
 # I got to create the folder after copying the stuff from previous stage so the permissions don't get overwritten
-FROM alpine:latest AS alpineruntime
+FROM alpine:3.12 AS alpineruntime
 
 # Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
@@ -73,6 +75,8 @@ RUN apk add --update --no-cache ca-certificates \
     libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c \
     nano
 RUN rm -rf /var/cache/apk/*
+# This causes issues with buildx as /var/run is a symlink to /run in alpine. So I'll delete it.
+RUN rm -f /var/run
 
 # /usr/local/bin -> /bin etc.
 COPY --from=alpineknot /usr/local/ /
