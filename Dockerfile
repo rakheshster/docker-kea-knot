@@ -1,7 +1,7 @@
 ################################### COMMON BUILDIMAGE ####################################
 # This image is to be a base where all the build dependencies are installed. 
 # I can use this in the subsequent stages to build stuff
-FROM alpine:latest AS alpinebuild
+FROM alpine:3.12 AS alpinebuild
 
 # I realized that the build process doesn't remove this intermediate image automatically so best to LABEL it here and then prune later
 # Thanks to https://stackoverflow.com/a/55082473
