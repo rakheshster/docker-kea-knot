@@ -41,7 +41,7 @@ fi
 
 # loop through the array and create them all
 for A in ${ARCH[@]}; do
-    echo "Building ${IMAGE}:${A}"
+    echo "Building ${IMAGE}"
     docker build --build-arg ARCH=$A . -t ${IMAGE}
 done
 
