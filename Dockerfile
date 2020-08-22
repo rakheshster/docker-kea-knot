@@ -8,13 +8,6 @@ FROM alpine:3.12 AS alpinebuild
 LABEL stage="alpinebuild"
 LABEL maintainer="Rakhesh Sasidharan"
 
-# I need the arch later on when downloading s6. Rather than doing the check at that later stage, I introduce the ARG here itself so I can quickly validate and fail if needed.
-# Use the --build-arg ARCH=xxx to pass an argument
-ARG ARCH=armhf
-RUN if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH} = "arm" || ${ARCH} = "aarch64" ]]; then \
-    echo "Incorrect architecture specified! Must be one of amd64, x86, armhf (for Pi), arm, aarch64"; exit 1; \
-    fi
-
 # Get the build-dependencies for everything I plan on building later
 # common stuff: git build-base libtool xz cmake
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
@@ -102,16 +95,44 @@ ARG ARCH=armhf
 LABEL maintainer="Rakhesh Sasidharan"
 ENV S6_VERSION 2.0.0.1
 
+# Download s6, but it is arch specific. 
+# Option 1: Pass the arch it via --build-arg ARCH=xxx (options are amd64, x86, armhf (for Pi), arm, aarch64. See https://github.com/just-containers/s6-overlay#releases)
+# Option 2: If I am doing a mutli-arch build, the TARGETPLATFORM variable contains the architecture. This is normalized as per https://github.com/containerd/containerd/blob/master/platforms/platforms.go#L80
+# though, and that doesn't match what s6 expects so I map that to the ARCH variable. If doing a multi-arch build there's no need to specify the ARCH argument.
+RUN case ${TARGETPLATFORM} in \
+    arm64) \
+        ARCH="amd64" \
+        ;; \
+    arm | arm/v7) \
+        ARCH="armhf" \
+        ;; \
+    arm/v6) \
+        ARCH="arm" \
+        ;; \
+    arm64 | arm/v8) \
+        ARCH="aarch64" \
+        ;; \
+    386) \
+        ARCH="x86" \
+        ;; \
+    amd64) \
+        ARCH="amd64" \
+        ;; \
+    *) \
+        if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH} = "arm" || ${ARCH} = "aarch64" ]]; then \
+            echo "Incorrect architecture specified! Must be one of amd64, x86, armhf (for Pi), arm, aarch64"; exit 1; \
+        fi \
+        ;; \
+    esac ; \
+    # The default instructions give the impression one must do a 2-stage extract. That's only to target this issue - https://github.com/just-containers/s6-overlay#known-issues-and-workarounds
+    wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-${ARCH}.tar.gz -P /tmp/ && \
+    tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
+    rm  -f /tmp/s6-overlay-${ARCH}.tar.gz
+
 # Copy the config files & s6 service files to the correct location
 COPY root/ /
 
-# Add s6 overlay. NOTE: the default instructions give the impression one must do a 2-stage extract. That's only to target this issue - https://github.com/just-containers/s6-overlay#known-issues-and-workarounds
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-${ARCH}.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
-    rm  -f /tmp/s6-overlay-${ARCH}.tar.gz
-
-# NOTE: s6 overlay doesn't support running as a different user, but I set the stubby service to run under user "stubby" in its service definition.
-# Similarly Unbound runs under its own user & group via the config file. 
+# NOTE: s6 overlay doesn't support running as a different user.
 
 EXPOSE 53/udp 53/tcp 8080/tcp
 # Knot DNS runs on 53. 
