@@ -1,7 +1,12 @@
+# I am pulling in my alpine-s6 image as the base here so I can reuse it for the common buildimage and later in the runtime. 
+# Initially I used to pull this separately at each stage but that gave errors with docker buildx for the BASE_VERSION argument.
+ARG BASE_VERSION=3.12-2.0.0.1
+FROM rakheshster/alpine-s6:${BASE_VERSION} AS mybase
+
 ################################### COMMON BUILDIMAGE ####################################
 # This image is to be a base where all the build dependencies are installed. 
 # I can use this in the subsequent stages to build stuff
-FROM alpine:3.12 AS alpinebuild
+FROM mybase AS alpinebuild
 
 # I realized that the build process doesn't remove this intermediate image automatically so best to LABEL it here and then prune later
 # Thanks to https://stackoverflow.com/a/55082473
@@ -17,8 +22,6 @@ RUN apk add --update --no-cache \
     openssl-dev boost-dev log4cplus-dev automake \
     pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
 RUN rm -rf /var/cache/apk/*
-# This causes issues with buildx as /var/run is a symlink to /run in alpine. So I'll delete it.
-RUN rm -f /var/run
 
 ################################## KEA DHCP ####################################
 # This image is to only build Kea Dhcp
@@ -64,7 +67,7 @@ RUN make && DESTDIR=/usr/local make install
 ################################### RUNTIME ENVIRONMENT FOR KEA & KNOT ####################################
 # This image has all the runtime dependencies, the built files from the previous stage, and I also create the groups and assign folder permissions etc. 
 # I got to create the folder after copying the stuff from previous stage so the permissions don't get overwritten
-FROM alpine:3.12 AS alpineruntime
+FROM mybase AS alpineruntime
 
 # Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
@@ -75,8 +78,6 @@ RUN apk add --update --no-cache ca-certificates \
     libuv luajit lmdb gnutls userspace-rcu libedit libidn2 fstrm protobuf-c \
     nano
 RUN rm -rf /var/cache/apk/*
-# This causes issues with buildx as /var/run is a symlink to /run in alpine. So I'll delete it.
-RUN rm -f /var/run
 
 # /usr/local/bin -> /bin etc.
 COPY --from=alpineknot /usr/local/ /
@@ -90,53 +91,16 @@ RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
 RUN mkdir -p /var/lib/knot-resolver && chown knot-res:knot-res /var/lib/knot-resolver
 RUN mkdir -p /var/cache/knot-resolver && chown knot-res:knot-res /var/cache/knot-resolver
 
-################################### S6 & FINALIZE ####################################
+################################### FINALIZE ####################################
 # This pulls in the previous stage, adds S6. This is my final stage. 
 FROM alpineruntime
 
-# I take the arch (for s6) as an argument. Options are amd64, x86, armhf (for Pi), arm, aarch64. See https://github.com/just-containers/s6-overlay#releases
-ARG ARCH=armhf 
 LABEL maintainer="Rakhesh Sasidharan"
-ENV S6_VERSION 2.0.0.1
-
-# Download s6, but it is arch specific. 
-# Option 1: Pass the arch it via --build-arg ARCH=xxx (options are amd64, x86, armhf (for Pi), arm, aarch64. See https://github.com/just-containers/s6-overlay#releases)
-# Option 2: If I am doing a mutli-arch build, the TARGETPLATFORM variable contains the architecture. This is normalized as per https://github.com/containerd/containerd/blob/master/platforms/platforms.go#L80
-# though, and that doesn't match what s6 expects so I map that to the ARCH variable. If doing a multi-arch build there's no need to specify the ARCH argument.
-RUN case ${TARGETPLATFORM} in \
-    arm64) \
-        ARCH="amd64" \
-        ;; \
-    arm | arm/v7) \
-        ARCH="armhf" \
-        ;; \
-    arm/v6) \
-        ARCH="arm" \
-        ;; \
-    arm64 | arm/v8) \
-        ARCH="aarch64" \
-        ;; \
-    386) \
-        ARCH="x86" \
-        ;; \
-    amd64) \
-        ARCH="amd64" \
-        ;; \
-    *) \
-        if ! [[ ${ARCH} = "amd64" || ${ARCH} = "x86" || ${ARCH} = "armhf" || ${ARCH} = "arm" || ${ARCH} = "aarch64" ]]; then \
-            echo "Incorrect architecture specified! Must be one of amd64, x86, armhf (for Pi), arm, aarch64"; exit 1; \
-        fi \
-        ;; \
-    esac ; \
-    # The default instructions give the impression one must do a 2-stage extract. That's only to target this issue - https://github.com/just-containers/s6-overlay#known-issues-and-workarounds
-    wget https://github.com/just-containers/s6-overlay/releases/download/v${S6_VERSION}/s6-overlay-${ARCH}.tar.gz -P /tmp/ && \
-    tar xzf /tmp/s6-overlay-${ARCH}.tar.gz -C / && \
-    rm  -f /tmp/s6-overlay-${ARCH}.tar.gz
 
 # Copy the config files & s6 service files to the correct location
 COPY root/ /
 
-# NOTE: s6 overlay doesn't support running as a different user.
+# NOTE: s6 overlay doesn't support running as a different user. However, Knot is configured to run as a non-root user in its config. Kea needs to run as root. 
 
 EXPOSE 53/udp 53/tcp 8080/tcp
 # Knot DNS runs on 53. 
