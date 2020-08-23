@@ -6,6 +6,6 @@ if [[ -z $1 ]]; then
     IMAGE="rakheshster/kea-knot"
 fi
 
-BASE_VERSION=3.12-2.0.0.1
+BASE_VERSION=v0.1.0
 
-docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6 . --push -t ${IMAGE}:${BASE_VERSION}
+docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6 . --push -t ${IMAGE}:${VERSION}
