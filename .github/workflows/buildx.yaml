@@ -1,0 +1,35 @@
+name: buildx
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Proceed?'
+        required: true
+        default: 'yes'
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v3
+        with:
+          buildx-version: latest
+          qemu-version: latest
+      -
+        name: Docker Buildx (build)
+        run: |
+          IMAGE="rakheshster/kea-knot"
+          PLATFORMS="linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
+          VERSION=v0.1.0
+
+          docker buildx build \
+            --platform $PLATFORMS \
+            --output "type=image,push=false" \
+            --file Dockerfile --tag ${IMAGE}-${VERSION}
