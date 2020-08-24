@@ -2,11 +2,14 @@ name: buildx
 
 on:
   workflow_dispatch:
-#    inputs:
-#      name:
-#        description: 'Proceed?'
-#        required: true
-#        default: 'yes'
+    inputs:
+      imagename:
+        description: 'Name of image'
+        required: true
+        default: 'rakheshster/kea-knot'
+      version:
+        description: 'Version'
+        required: true
 
 jobs:
   buildx:
@@ -25,11 +28,33 @@ jobs:
       -
         name: Docker Buildx (build)
         run: |
-          IMAGE="rakheshster/kea-knot"
+          IMAGENAME=${{ inputs.imagename }}
           PLATFORMS="linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
-          VERSION=v0.1.0
+          VERSION=${{ inputs.version }}
 
-          docker buildx build \
-            --platform $PLATFORMS \
-            --output "type=image,push=false" \
-            . --tag ${IMAGE}-${VERSION}
+          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}-${VERSION}
+      -
+        name: Login to Docker Hub
+        if: success() && github.event_name != 'pull_request'
+        uses: crazy-max/ghaction-docker-login@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      -
+        name: Docker Buildx (push)
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          IMAGENAME=${{ inputs.imagename }}
+          PLATFORMS="linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
+          VERSION=${{ inputs.version }}
+
+          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}-${VERSION}
+      -
+        name: Inspect image
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          IMAGENAME=${{ inputs.imagename }}
+          PLATFORMS="linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
+          VERSION=${{ inputs.version }}
+
+          docker buildx imagetools inspect ${IMAGENAME}-${VERSION}
