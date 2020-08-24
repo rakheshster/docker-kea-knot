@@ -2,11 +2,11 @@ name: buildx
 
 on:
   workflow_dispatch:
-    inputs:
-      name:
-        description: 'Proceed?'
-        required: true
-        default: 'yes'
+#    inputs:
+#      name:
+#        description: 'Proceed?'
+#        required: true
+#        default: 'yes'
 
 jobs:
   buildx:
@@ -32,4 +32,4 @@ jobs:
           docker buildx build \
             --platform $PLATFORMS \
             --output "type=image,push=false" \
-            --file Dockerfile --tag ${IMAGE}-${VERSION}
+            . --tag ${IMAGE}-${VERSION}
