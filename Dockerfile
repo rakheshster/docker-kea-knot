@@ -27,7 +27,8 @@ RUN rm -rf /var/cache/apk/*
 # This image is to only build Kea Dhcp
 FROM alpinebuild AS alpinekea
 
-ENV KEA_VERSION 1.7.10
+# ENV KEA_VERSION 1.7.10
+ENV KEA_VERSION 1.6.3
 
 LABEL stage="alpinekea"
 LABEL maintainer="Rakhesh Sasidharan"
