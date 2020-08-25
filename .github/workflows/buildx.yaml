@@ -29,8 +29,6 @@ jobs:
       # IMAGENAME: ${{ github.event.inputs.imagename }}
       # VERSION: ${{ github.event.inputs.version }}
       PLATFORMS: "linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  
 
     # the steps of my job
     steps:
@@ -67,8 +65,8 @@ jobs:
         if: success() && github.event_name != 'pull_request'
         uses: crazy-max/ghaction-docker-login@v1
         with:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }} 
 
       - name: Docker Buildx (push)
         if: success() && github.event_name != 'pull_request'
