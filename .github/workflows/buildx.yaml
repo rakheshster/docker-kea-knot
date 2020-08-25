@@ -10,16 +10,18 @@ on:
       version:
         description: 'Version'
         required: true
+        default: 'v0.1.0'
 
 jobs:
   buildx:
     runs-on: ubuntu-latest
     env: 
-      IMAGENAME=${{ inputs.imagename }}
-      PLATFORMS="linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
-      VERSION=${{ inputs.version }}
-      DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}  
+      # Variable format for workflow_dipatch https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/
+      IMAGENAME: ${{ github.event.inputs.imagename }}
+      VERSION: ${{ github.event.inputs.version }}
+      PLATFORMS: "linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  
 
     steps:
       - name: Checkout the code
