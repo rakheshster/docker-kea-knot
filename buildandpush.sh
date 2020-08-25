@@ -1,13 +1,12 @@
 #!/bin/bash
-# Usage ./buildandpush.sh [image name]
+# Usage ./buildandpush.sh
 
-# if no image name, default to something
-if [[ -z $1 ]]; then
-    IMAGE="rakheshster/kea-knot"
-fi
+BUILDINFO="$(pwd)/buildinfo.json"
+if ! [[ -r "$BUILDINFO" ]]; then echo "Cannot find $BUILDINFO file. Exiting ..."; exit 1; fi
 
-VERSION=v0.1.0
+if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1; fi
 
-docker buildx build --platform linux/amd64,linux/386,linux/arm/v7,linux/arm/v6 . --push -t ${IMAGE}:${VERSION} --progress=plain
+VERSION=$(jq -r '.version' $BUILDINFO)
+IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
 
-# NOTE: no linux/arm64. The build was breaking for that. 
+docker buildx build --platform linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6 . --push -t ${IMAGENAME}:${VERSION} --progress=plain

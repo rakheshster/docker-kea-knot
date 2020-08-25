@@ -1,18 +1,21 @@
 #!/bin/bash
-# Usage ./buildlocal.sh [image name]
+# Usage ./buildlocal.sh 
 
-# if no image name, default to something
-if [[ -z $1 ]]; then 
-    IMAGE="rakheshster/kea-knot"
-fi
+BUILDINFO="$(pwd)/buildinfo.json"
+if ! [[ -r "$BUILDINFO" ]]; then echo "Cannot find $BUILDINFO file. Exiting ..."; exit 1; fi
+
+if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1; fi
+
+VERSION=$(jq -r '.version' $BUILDINFO)
+IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
 
 # delete an existing image of the same name if it exists
 # thanks to https://stackoverflow.com/questions/30543409/how-to-check-if-a-docker-image-with-a-specific-tag-exist-locally
-if [[ $(docker image inspect ${IMAGE} 2>/dev/null) == "" ]]; then 
-    docker rmi -f ${IMAGE}
+if [[ $(docker image inspect ${IMAGENAME} 2>/dev/null) == "" ]]; then
+    docker rmi -f ${IMAGENAME}:${VERSION}
 fi
 
-docker build . -t ${IMAGE}
+docker build . -t ${IMAGENAME}:${VERSION}
 
 # prune the intermediate images
 # skip this for now as I want to keep them around to improve build times ...
