@@ -1,0 +1,85 @@
+# This is the name of the workflow
+name: Buildx & Push to DockerHub [S]
+
+# When it runs
+on:
+  workflow_dispatch:
+# I am commenting this stuff out as I don't use it any more. I now pull in the info via a JSON file.
+# I wanted to leave this behind however for future reference.
+#    inputs:
+#      imagename:
+#        description: 'Name of image'
+#        required: true
+#        default: 'rakheshster/<FILLME>'
+#      version:
+#        description: 'Version'
+#        required: true
+#        default: 'v<xxx.yyy.zzz>'
+
+# And what jobs it has
+jobs:
+  # Just one job here ... imaginatively called "buildx" (that's its id at least, it doesn't have a name coz I couldn't think of something)
+  buildx:
+   # this job runs on Ubuntu
+    runs-on: [self-hosted, linux, x64]
+    # these are its environment variables
+    env: 
+      # If I were using the workflow_dispatch inputs above, I can reference them as variables here
+      # Variable format for workflow_dipatch https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/
+      # IMAGENAME: ${{ github.event.inputs.imagename }}
+      # VERSION: ${{ github.event.inputs.version }}
+      PLATFORMS: "linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
+
+    # the steps of my job
+    steps:
+        # Checkout the code from GitHib
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+        # Read my JSON file via a simple cat, then output it as the output of this step (which I can then refer to via its id "read_buildinfo") 
+      - id: read_buildinfo
+        run: |
+          content=`cat ./buildinfo.json`
+          # the following lines are required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          echo "::set-output name=packageJson::$content"
+      
+        # Thanks to https://github.com/marketplace/actions/docker-buildx
+      - name: Set up Docker Buildx
+        uses: crazy-max/ghaction-docker-buildx@v3
+        with:
+          buildx-version: latest
+          qemu-version: latest
+
+      - name: Docker Buildx (build)
+        run: |
+          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
+          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+
+          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}-${VERSION}
+
+      - name: Login to Docker Hub
+        if: success() && github.event_name != 'pull_request'
+        uses: crazy-max/ghaction-docker-login@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }} 
+
+      - name: Docker Buildx (push)
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
+          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+
+          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}-${VERSION}
+
+      - name: Inspect image
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
+          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+
+          docker buildx imagetools inspect ${IMAGENAME}-${VERSION}
