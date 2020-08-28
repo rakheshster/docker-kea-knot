@@ -22,6 +22,8 @@ jobs:
   buildx:
    # this job runs on Ubuntu
     runs-on: [self-hosted, linux, x64]
+    # set timeout to 10 days (lol)
+    timeout-minutes: 14400
     # these are its environment variables
     env: 
       # If I were using the workflow_dispatch inputs above, I can reference them as variables here
