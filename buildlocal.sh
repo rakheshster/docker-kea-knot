@@ -8,6 +8,7 @@ if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1
 
 VERSION=$(jq -r '.version' $BUILDINFO)
 IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
+FLAVOUR=$(jq -r '.flavour' $BUILDINFO)
 
 # delete an existing image of the same name if it exists
 # thanks to https://stackoverflow.com/questions/30543409/how-to-check-if-a-docker-image-with-a-specific-tag-exist-locally
@@ -15,9 +16,8 @@ if [[ $(docker image inspect ${IMAGENAME} 2>/dev/null) == "" ]]; then
     docker rmi -f ${IMAGENAME}:${VERSION}
 fi
 
-docker build . -t ${IMAGENAME}:${VERSION}
-
-# prune the intermediate images
-# skip this for now as I want to keep them around to improve build times ...
-# docker image prune --filter label=stage=alpinestubby -f
-# docker image prune --filter label=stage=alpineunbound -f
+if [[ $FLAVOUR == "debian" ]]; then
+	docker build . -t ${IMAGENAME}:${VERSION}-${FLAVOUR} -f "$(pwd)/Dockerfile.debian"
+else 
+	docker build . -t ${IMAGENAME}:${VERSION} -f "$(pwd)/Dockerfile"
+fi

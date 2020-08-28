@@ -15,11 +15,11 @@ LABEL maintainer="Rakhesh Sasidharan"
 
 # Get the build-dependencies for everything I plan on building later
 # common stuff: git build-base libtool xz cmake
-# kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
-# knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
+# kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-essential libtool libssl-dev openssl libboost1.67-dev liblog4cplus-dev automake
+# knot dns: pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev libprotobuf-c-dev
 RUN apt-get update && apt-get install -y \
     git build-essential libtool xz-utils cmake \
-    openssl libboost1.67-dev liblog4cplus-dev automake \
+    libssl-dev openssl libboost1.67-dev liblog4cplus-dev automake \
     pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev libprotobuf-c-dev
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -72,7 +72,7 @@ FROM mybase AS debianruntime
 
 # Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
-# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv luajit lmdb gnutls userspace-rcu libedit libidn2
+# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv1 libluajit-5.1-2 liblmdb0 gnutls-bin liburcu6 libedit2 libidn2-0 fstrm-bin protobuf-c-compiler
 RUN apt-get update && apt-get install -y ca-certificates \
     dnsutils \
     openssl liblog4cplus-1.1-9 libboost-all-dev \
