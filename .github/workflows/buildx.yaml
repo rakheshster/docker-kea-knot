@@ -28,7 +28,7 @@ jobs:
       # Variable format for workflow_dipatch https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/
       # IMAGENAME: ${{ github.event.inputs.imagename }}
       # VERSION: ${{ github.event.inputs.version }}
-      PLATFORMS: "linux/amd64,linux/386,linux/arm/v7,linux/arm/v6"
+      PLATFORMS: "linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6"
 
     # the steps of my job
     steps:
