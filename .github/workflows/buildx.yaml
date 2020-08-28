@@ -59,7 +59,7 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}-${VERSION}
+          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -74,7 +74,7 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}-${VERSION}
+          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}
 
       - name: Inspect image
         if: always() && github.event_name != 'pull_request'
@@ -82,4 +82,4 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx imagetools inspect ${IMAGENAME}-${VERSION}
+          docker buildx imagetools inspect ${IMAGENAME}:${VERSION}
