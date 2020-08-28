@@ -18,11 +18,11 @@ on:
 
 # And what jobs it has
 jobs:
-  # Just one job here ... imaginatively called "buildx" (that's its id at least, it doesn't have a name coz I couldn't think of something)
-  buildx:
+  # Just one job here ... imaginatively called "buildx-selfhosted" (that's its id at least, it doesn't have a name coz I couldn't think of something)
+  buildx-selfhosted:
    # this job runs on Ubuntu
     runs-on: [self-hosted, linux, x64]
-    # set timeout to 10 days (lol)
+    # set timeout to 10 days
     timeout-minutes: 14400
     # these are its environment variables
     env: 
