@@ -4,6 +4,11 @@ name: Buildx & Push [Alpine]
 # When it runs
 on:
   workflow_dispatch:
+    inputs:
+      runs-on:
+        description: "Runs on ... (self-hosted/ ubuntu-latest)"
+        required: false
+        default: 'self-hosted'
 # I am commenting this stuff out as I don't use it any more. I now pull in the info via a JSON file.
 # I wanted to leave this behind however for future reference.
 #    inputs:
@@ -22,7 +27,8 @@ jobs:
   buildx-alpine:
     # this job runs on Ubuntu / Self-hosted (whatever is uncommented below)
     # runs-on: ubuntu-latest
-    runs-on: [self-hosted, linux]
+    # runs-on: [self-hosted, linux]
+    runs-on: ${{ github.event.inputs.runs-on }}
     # set timeout to 10 days
     timeout-minutes: 14400
     # these are its environment variables
