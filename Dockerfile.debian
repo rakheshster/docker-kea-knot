@@ -16,11 +16,11 @@ LABEL maintainer="Rakhesh Sasidharan"
 # Get the build-dependencies for everything I plan on building later
 # common stuff: git build-base libtool xz cmake
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-essential libtool libssl-dev openssl libboost-system-dev libboost-dev liblog4cplus-dev automake
-# knot dns: pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev libprotobuf-c-dev libprotobuf-c1
+# knot dns: pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev protobuf-c-compiler
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git build-essential libtool xz-utils cmake \
     libssl-dev openssl libboost-dev libboost-system-dev liblog4cplus-dev automake \
-    pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev libprotobuf-c-dev libprotobuf-c1
+    pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev protobuf-c-compiler
 RUN apt-get -y clean
 RUN rm -rf /var/lib/apt/lists/*
 

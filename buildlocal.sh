@@ -8,7 +8,9 @@ if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1
 
 VERSION=$(jq -r '.version' $BUILDINFO)
 IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
-FLAVOUR=$1
+[[ $1 == "debian" ]] && FLAVOUR="debian" || FLAVOUR="alpine"
+
+echo "Building $IMAGENAME-$VERSION (flavour: $FLAVOUR)"
 
 # delete an existing image of the same name if it exists
 # thanks to https://stackoverflow.com/questions/30543409/how-to-check-if-a-docker-image-with-a-specific-tag-exist-locally
