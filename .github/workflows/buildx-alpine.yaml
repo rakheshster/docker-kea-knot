@@ -1,9 +1,14 @@
 # This is the name of the workflow
-name: Buildx & Push [Debian][Self-hosted]
+name: Buildx & Push [Alpine]
 
 # When it runs
 on:
   workflow_dispatch:
+    inputs:
+      flavour:
+        description: "Runs on ... (self-hosted/ ubuntu-latest)"
+        required: false
+        default: 'self-hosted'
 # I am commenting this stuff out as I don't use it any more. I now pull in the info via a JSON file.
 # I wanted to leave this behind however for future reference.
 #    inputs:
@@ -18,11 +23,12 @@ on:
 
 # And what jobs it has
 jobs:
-  # Just one job here ... imaginatively called "buildx-debian" (that's its id at least, it doesn't have a name coz I couldn't think of something)
-  buildx-debian:
+  # Just one job here ... imaginatively called "buildx-alpine" (that's its id at least, it doesn't have a name coz I couldn't think of something)
+  buildx-alpine:
     # this job runs on Ubuntu / Self-hosted (whatever is uncommented below)
     # runs-on: ubuntu-latest
-    runs-on: [self-hosted, linux]
+    # runs-on: [self-hosted, linux]
+    runs-on: ${{ github.event.inputs.runs-on }}
     # set timeout to 10 days
     timeout-minutes: 14400
     # these are its environment variables
@@ -62,7 +68,7 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}-debian -f ${GITHUB_WORKSPACE}/Dockerfile.debian
+          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -77,7 +83,7 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}-debian -f ${GITHUB_WORKSPACE}/Dockerfile.debian
+          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}
 
       - name: Inspect image
         if: always() && github.event_name != 'pull_request'
@@ -85,4 +91,4 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx imagetools inspect ${IMAGENAME}:${VERSION}-debian
+          docker buildx imagetools inspect ${IMAGENAME}:${VERSION}
