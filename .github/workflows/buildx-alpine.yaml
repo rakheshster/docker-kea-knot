@@ -1,5 +1,5 @@
 # This is the name of the workflow
-name: Buildx & Push to DockerHub [Alpine]
+name: Buildx & Push [Alpine]
 
 # When it runs
 on:
