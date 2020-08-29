@@ -8,7 +8,7 @@ on:
         flavour:
           description: "Optional name of flavour to build (debian/ alpine)"
           required: false
-          default: "alpine"
+          default: 'alpine'
 # I am commenting this stuff out as I don't use it any more. I now pull in the info via a JSON file.
 # I wanted to leave this behind however for future reference.
 #    inputs:
@@ -62,7 +62,7 @@ jobs:
           qemu-version: latest
 
       - name: Docker Buildx (build) (Debian)
-        if: ${{ github.event.inputs.flavour == "debian" }}
+        if: ${{ github.event.inputs.flavour == 'debian' }}
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
@@ -70,7 +70,7 @@ jobs:
           docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}-debian -f ${GITHUB_WORKSPACE}/Dockerfile.debian
 
       - name: Docker Buildx (build) (Alpine)
-        if: ${{ github.event.inputs.flavour == "alpine" }}
+        if: ${{ github.event.inputs.flavour == 'alpine' }}
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
@@ -85,7 +85,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }} 
 
       - name: Docker Buildx (push) (Debian)
-        if: success() && github.event_name != 'pull_request' && github.event.inputs.flavour == "debian"
+        if: success() && github.event_name != 'pull_request' && github.event.inputs.flavour == 'debian'
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
@@ -93,7 +93,7 @@ jobs:
           docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}-debian -f ${GITHUB_WORKSPACE}/Dockerfile.debian
 
       - name: Docker Buildx (push) (Alpine)
-        if: success() && github.event_name != 'pull_request' && github.event.inputs.flavour == "alpine"
+        if: success() && github.event_name != 'pull_request' && github.event.inputs.flavour == 'alpine'
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
@@ -101,7 +101,7 @@ jobs:
           docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}
 
       - name: Inspect image (Debian)
-        if: always() && github.event_name != 'pull_request' && github.event.inputs.flavour == "debian"
+        if: always() && github.event_name != 'pull_request' && github.event.inputs.flavour == 'debian'
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
@@ -109,7 +109,7 @@ jobs:
           docker buildx imagetools inspect ${IMAGENAME}:${VERSION}-debian
 
       - name: Inspect image (Debian) (Alpine)
-        if: always() && github.event_name != 'pull_request' && github.event.inputs.flavour == "alpine"
+        if: always() && github.event_name != 'pull_request' && github.event.inputs.flavour == 'alpine'
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
