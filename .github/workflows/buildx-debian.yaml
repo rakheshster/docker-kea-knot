@@ -1,14 +1,9 @@
 # This is the name of the workflow
-name: Buildx & Push to DockerHub
+name: Buildx & Push to DockerHub [Debian]
 
 # When it runs
 on:
   workflow_dispatch:
-    inputs:
-        flavour:
-          description: "Optional name of flavour to build (debian/ alpine)"
-          required: false
-          default: "alpine"
 # I am commenting this stuff out as I don't use it any more. I now pull in the info via a JSON file.
 # I wanted to leave this behind however for future reference.
 #    inputs:
@@ -23,10 +18,10 @@ on:
 
 # And what jobs it has
 jobs:
-  # Just one job here ... imaginatively called "buildx" (that's its id at least, it doesn't have a name coz I couldn't think of something)
-  buildx:
+  # Just one job here ... imaginatively called "buildx-debian" (that's its id at least, it doesn't have a name coz I couldn't think of something)
+  buildx-debian:
    # this job runs on Ubuntu
-    runs-on: ubuntu-latest
+   runs-on: ubuntu-latest
     # these are its environment variables
     env: 
       # If I were using the workflow_dispatch inputs above, I can reference them as variables here
@@ -59,21 +54,12 @@ jobs:
           buildx-version: latest
           qemu-version: latest
 
-      - name: Docker Buildx (build) (Debian)
-        if: ${{ github.event.inputs.flavour == "debian" }}
+      - name: Docker Buildx (build)
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
           docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}-debian -f ${GITHUB_WORKSPACE}/Dockerfile.debian
-
-      - name: Docker Buildx (build) (Alpine)
-        if: ${{ github.event.inputs.flavour == "alpine" }}
-        run: |
-          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
-          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
-
-          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -82,34 +68,18 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }} 
 
-      - name: Docker Buildx (push) (Debian)
-        if: success() && github.event_name != 'pull_request' && github.event.inputs.flavour == "debian"
+      - name: Docker Buildx (push)
+        if: success() && github.event_name != 'pull_request'
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
           docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}-debian -f ${GITHUB_WORKSPACE}/Dockerfile.debian
 
-      - name: Docker Buildx (push) (Alpine)
-        if: success() && github.event_name != 'pull_request' && github.event.inputs.flavour == "alpine"
-        run: |
-          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
-          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
-
-          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}
-
-      - name: Inspect image (Debian)
-        if: always() && github.event_name != 'pull_request' && github.event.inputs.flavour == "debian"
+      - name: Inspect image
+        if: always() && github.event_name != 'pull_request'
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
           docker buildx imagetools inspect ${IMAGENAME}:${VERSION}-debian
-
-      - name: Inspect image (Debian) (Alpine)
-        if: always() && github.event_name != 'pull_request' && github.event.inputs.flavour == "alpine"
-        run: |
-          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
-          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
-
-          docker buildx imagetools inspect ${IMAGENAME}:${VERSION}
