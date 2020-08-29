@@ -21,7 +21,7 @@ jobs:
   # Just one job here ... imaginatively called "buildx-alpine" (that's its id at least, it doesn't have a name coz I couldn't think of something)
   buildx-alpine:
    # this job runs on Ubuntu
-   runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     # these are its environment variables
     env: 
       # If I were using the workflow_dispatch inputs above, I can reference them as variables here
