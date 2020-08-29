@@ -20,8 +20,11 @@ on:
 jobs:
   # Just one job here ... imaginatively called "buildx-debian" (that's its id at least, it doesn't have a name coz I couldn't think of something)
   buildx-debian:
-   # this job runs on Ubuntu
-    runs-on: ubuntu-latest
+    # this job runs on Ubuntu / Self-hosted (whatever is uncommented below)
+    # runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
+    # set timeout to 10 days
+    timeout-minutes: 14400
     # these are its environment variables
     env: 
       # If I were using the workflow_dispatch inputs above, I can reference them as variables here
