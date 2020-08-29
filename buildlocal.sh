@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage ./buildlocal.sh 
+# Usage ./buildlocal.sh [<flavour>]
 
 BUILDINFO="$(pwd)/buildinfo.json"
 if ! [[ -r "$BUILDINFO" ]]; then echo "Cannot find $BUILDINFO file. Exiting ..."; exit 1; fi
@@ -8,7 +8,7 @@ if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1
 
 VERSION=$(jq -r '.version' $BUILDINFO)
 IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
-FLAVOUR=$(jq -r '.flavour' $BUILDINFO)
+FLAVOUR=$1
 
 # delete an existing image of the same name if it exists
 # thanks to https://stackoverflow.com/questions/30543409/how-to-check-if-a-docker-image-with-a-specific-tag-exist-locally
