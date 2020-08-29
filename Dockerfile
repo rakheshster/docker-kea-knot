@@ -28,7 +28,7 @@ RUN rm -rf /var/cache/apk/*
 FROM alpinebuild AS alpinekea
 
 # ENV KEA_VERSION 1.7.10
-ENV KEA_VERSION 1.6.3
+ENV KEA_VERSION 1.8.0
 
 LABEL stage="alpinekea"
 LABEL maintainer="Rakhesh Sasidharan"

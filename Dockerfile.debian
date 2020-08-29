@@ -29,7 +29,7 @@ RUN rm -rf /var/lib/apt/lists/*
 FROM debianbuild AS debiankea
 
 # ENV KEA_VERSION 1.7.10
-ENV KEA_VERSION 1.6.3
+ENV KEA_VERSION 1.8.0
 
 LABEL stage="debiankea"
 LABEL maintainer="Rakhesh Sasidharan"
