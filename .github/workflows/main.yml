@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       runs-on:
-        description: "Runs on ... (self-hosted/ ubuntu-latest)"
+        description: "self-hosted | ubuntu-latest"
         required: false
         default: 'self-hosted'
 # I am commenting this stuff out as I don't use it any more. I now pull in the info via a JSON file.
