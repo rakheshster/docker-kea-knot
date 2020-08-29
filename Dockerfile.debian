@@ -76,7 +76,7 @@ FROM mybase AS debianruntime
 # Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv1 libluajit-5.1-2 liblmdb0 gnutls-bin liburcu6 libedit2 libidn2-0 fstrm-bin protobuf-c-compiler
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     dnsutils \
-    openssl liblog4cplus-1.1-9 libboost-dev \
+    openssl liblog4cplus-1.1-9 libboost-dev libboost-system-dev \
     libuv1 libluajit-5.1-2 liblmdb0 gnutls-bin liburcu6 libedit2 libidn2-0 fstrm-bin protobuf-c-compiler \
     nano
 RUN apt-get -y clean
