@@ -63,12 +63,33 @@ jobs:
           buildx-version: latest
           qemu-version: latest
 
+      - name: Restore or Create a cache
+        uses: actions/cache@v2
+        id: cache
+        with:
+          # Where to store the cache
+          path: /tmp/.buildx-cache
+          # The key created when saving a cache and the key used to search for a cache.
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          #  An ordered list of alternative keys to use for finding the cache if no cache hit occurred for key.
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+          # When key matches an existing cache, it's called a cache hit, and the action restores the cached files to the path directory.
+          # When key doesn't match an existing cache, it's called a cache miss, and a new cache is created if the job completes successfully. 
+          # When a cache miss occurs, the action searches for alternate keys called restore-keys.
+
       - name: Docker Buildx (build)
         run: |
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build --platform $PLATFORMS --output "type=image,push=false" . --tag ${IMAGENAME}:${VERSION}
+          docker buildx build \
+            --platform $PLATFORMS \
+            --output "type=image,push=false" \
+            --tag ${IMAGENAME}:${VERSION} \
+            --cache-from "type=local,src=/tmp/.buildx-cache" \
+            --cache-to "type=local,dest=/tmp/.buildx-cache" \ 
+            .
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -83,7 +104,13 @@ jobs:
           IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
           VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build --platform $PLATFORMS --output "type=image,push=true" . --tag ${IMAGENAME}:${VERSION}
+          docker buildx build \
+          --platform $PLATFORMS \
+          --output "type=image,push=true" \
+          --tag ${IMAGENAME}:${VERSION} \
+          --cache-from "type=local,src=/tmp/.buildx-cache" \
+          --cache-to "type=local,dest=/tmp/.buildx-cache" \ 
+          .
 
       - name: Inspect image
         if: always() && github.event_name != 'pull_request'
