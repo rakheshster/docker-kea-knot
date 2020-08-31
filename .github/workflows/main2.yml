@@ -89,8 +89,7 @@ jobs:
           --tag ${IMAGENAME}:${VERSION}-debian \
           --file ${GITHUB_WORKSPACE}/Dockerfile.debian \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache" \ 
-          .
+          --cache-to "type=local,dest=/tmp/.buildx-cache" ./
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -110,9 +109,7 @@ jobs:
           --output "type=image,push=true" \
           --tag ${IMAGENAME}:${VERSION}-debian \
           --file ${GITHUB_WORKSPACE}/Dockerfile.debian \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache" \ 
-          .
+          --cache-from "type=local,src=/tmp/.buildx-cache" ./
 
       - name: Inspect image
         if: always() && github.event_name != 'pull_request'
