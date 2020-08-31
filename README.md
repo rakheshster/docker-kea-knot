@@ -15,16 +15,16 @@ Neither Kea nor DHCP server provide DNS resolution for its clients, so I needed 
 At home I have this container running side by side to my [Stubby-Unbound](https://github.com/rakheshster/docker-stubby-unbound) container. The former provides DHCP and local authoritative DNS, the latter is for upstream DNS-over-TLS resolution. Yes, I feel very fancy about my setup. 😉
 
 ## Debian and Alpine?
-Initially I based this image on Alpine but I quickly realised that Kea takes ages to compile on it. If I do a `docker builds build` multi arch build for instance, it takes a whooping 17 hours! The same on a Debian based image is only 8 hours. Nearly half. 
+Initially I based this image on Alpine but I quickly realised that Kea takes ages to compile on it. If I do a `docker builds build` multi arch build for instance, it takes a whooping 17 hours! The same on a Debian based image is only 8 hours. Nearly half. (*Update*: Surprisingly, once I switched from Kea 1.7 to 1.8 the Alpine version too buids as fast as the Debian version. Not sure if it's a one time thing ... ymmv).
 
 I have no idea why this is the case. Maybe it's because Alpine uses `musl` while Debian uses `glibc` for the C libraries? Since I had put in the effort for Alpine initially I decided to keep it around as the default but also add the Debian one as an alternative. Hence the additional `Dockerfile.debian` and two set of Docker images. I figure for the end user the compile times don't matter as it's just a simple download after all (both images are less than 300 MB in compressed size). 
 
 ## Getting this
-It is best to target a specific release when pulling this repo. Either switch to the correct tag after downloading, or download a zip of the latest release from the [Releases](https://github.com/rakheshster/docker-kea-knot/releases) page. In the interest of speed however, as mentioned above I'd suggest downloading the built image from Docker Hub at [rakheshster/stubby-unbound:version](https://hub.docker.com/repository/docker/rakheshster/stubby-unbound).
+It is best to target a specific release when pulling this repo. Either switch to the correct tag after downloading, or download a zip of the latest release from the [Releases](https://github.com/rakheshster/docker-kea-knot/releases) page. In the interest of speed however, as mentioned above I'd suggest downloading the built image from Docker Hub at [rakheshster/kea-knot](https://hub.docker.com/repository/docker/rakheshster/kea-knot).
 
 The version numbers are of the format `<kea version>-<knot version>-<patch>` and optionally have a `-debian` suffix for the Debian variant. 
 
-The current version is "1.8.0-2.9.5-1" contain the following:
+The current version is "1.8.0-2.9.5-1" and contains the following:
   * Alpine 3.12 or Debian Buster & s6-overlay 2.0.0.1 (via my [alpine-s6](https://hub.docker.com/repository/docker/rakheshster/alpine-s6) or [debiane-s6](https://hub.docker.com/repository/docker/rakheshster/debian-s6) images).
   * Kea DHCP 1.8.0
   * Knot DNS 2.9.5
