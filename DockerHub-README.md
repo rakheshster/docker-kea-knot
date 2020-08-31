@@ -8,7 +8,7 @@ I built this because I wanted a DHCP server for home use that could be load bala
 
 Neither Kea nor DHCP server provide DNS resolution for its clients, so I needed an authoritative DNS server that supports Dynamic DNS updates so it could get DHCP assignments from Kea. The only authoritative DNS servers I could find that does this were Knot or Bind9. I decided to go with Knot as it's newer and more secure. This Docker image thus contains Kea and Knot packaged together with some config files thrown in to show how things could be setup. 
 
-At home I have this container running side by side to my [Stubby-Unbound](https://github.com/rakheshster/docker-stubby-unbound) container. The former provides DHCP and local authoritative DNS, the latter is for upstream DNS-over-TLS resolution. Yes, I feel very fancy about my setup. 😉
+At home I have this container running side by side to my [Stubby-Unbound](https://hub.docker.com/repository/docker/rakheshster/stubby-dnsmasq) container. The former provides DHCP and local authoritative DNS, the latter is for upstream DNS-over-TLS resolution. Yes, I feel very fancy about my setup. 😉
 
 # Debian and Alpine?
 Initially I based this image on Alpine but I quickly realised that Kea takes ages to compile on it. If I do a `docker builds build` multi arch build for instance, it takes a whooping 17 hours! The same on a Debian based image is only 8 hours. Nearly half. 
