@@ -6,6 +6,7 @@ if [[ -z "$1" ]]; then
 fi
 
 ZONE=$1
+ZONESPATH="/var/lib/knot/zones"
 
 # https://www.knot-dns.cz/docs/2.8/singlehtml/#reading-and-editing-the-zone-file-safely
 # Temporarily postpone automatic zone-changing events and flush zone journal into the zone file.
@@ -13,17 +14,17 @@ ZONE=$1
     /sbin/knotc -b zone-flush $ZONE
 
 # Make a backup of the existing zone and open the zone file in nano (yes, nano!)
-cp "/var/lib/knot/zones/${ZONE}.zone" "/var/lib/knot/zones/${ZONE}.zonebkp"
-nano -w "/var/lib/knot/zones/${ZONE}.zone"
+cp "${ZONESPATH}/${ZONE}.zone" "${ZONESPATH}/${ZONE}.zonebkp"
+nano -w "${ZONESPATH}/${ZONE}.zone"
 
 # Do a validation of the new zone
 if /sbin/knotc zone-check $ZONE ; then
     echo "New zone has passed validation checks."
-    rm -f "/var/lib/knot/zones/${ZONE}.zonebkp"
+    rm -f "${ZONESPATH}/${ZONE}.zonebkp"
 else 
-    echo "New zone file fails validation checks. Reverting to previous version. The broken zone is saved as /var/lib/knot/zones/${ZONE}.zonebroken in the container."
-    cp "/var/lib/knot/zones/${ZONE}.zone" "/var/lib/knot/zones/${ZONE}.zonebroken"
-    mv "/var/lib/knot/zones/${ZONE}.zonebkp" "/var/lib/knot/zones/${ZONE}.zone"
+    echo "New zone file fails validation checks. Reverting to previous version. The broken zone is saved as ${ZONESPATH}/${ZONE}.zonebroken in the container."
+    cp "${ZONESPATH}/${ZONE}.zone" "${ZONESPATH}/${ZONE}.zonebroken"
+    mv "${ZONESPATH}/${ZONE}.zonebkp" "${ZONESPATH}/${ZONE}.zone"
 fi
 
 # Reload the zone from disk, dismiss the zone free, and flush zone journal into the zone file.

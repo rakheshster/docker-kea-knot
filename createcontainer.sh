@@ -22,10 +22,7 @@ fi
 KNOT_CONFIG=${NAME}_knotconfig && docker volume create $KNOT_CONFIG
 KNOT_ZONES=${NAME}_knotzones && docker volume create $KNOT_ZONES
 
-# Knot Resolver needs (3) Config dir /etc/knot-resolver
-KNOTR_CONFIG=${NAME}_knotresconfig && docker volume create $KNOTR_CONFIG
-
-# Kea needs (4) Config dir /etc/kea  and (5) a place to save the leases 
+# Kea needs (3) Config dir /etc/kea  and (4) a place to save the leases 
 KEA_CONFIG=${NAME}_keaconfig && docker volume create $KEA_CONFIG
 KEA_LEASES=${NAME}_kealeases && docker volume create $KEA_LEASES
 
@@ -52,7 +49,6 @@ if [[ -z "$3" ]]; then
         -e TZ="Europe/London" \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
         --mount type=volume,source=$KNOT_ZONES,target=/var/lib/knot/zones \
-        --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
         "$IMAGE"
@@ -65,7 +61,6 @@ else
         -e TZ="Europe/London" \
         --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
         --mount type=volume,source=$KNOT_ZONES,target=/var/lib/knot/zones \
-        --mount type=volume,source=$KNOTR_CONFIG,target=/etc/knot-resolver \
         --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
         --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
         "$IMAGE"
@@ -82,7 +77,7 @@ printf "\nTo start the container do: \n\tdocker start $NAME"
 printf "\n\nCreating ./${NAME}.service for systemd"
 cat <<EOF > $NAME.service
     [Unit]
-    Description=Stubby Unbound Container
+    Description=Kea Knot Container
     Requires=docker.service
     After=docker.service
 
@@ -90,7 +85,6 @@ cat <<EOF > $NAME.service
     Restart=on-abort
     ExecStart=/usr/bin/docker start -a $NAME
     ExecStop=/usr/bin/docker stop -t 2 $NAME
-    ExecReload=/usr/bin/docker exec $NAME s6-svc -h /var/run/s6/services/dnsmasq
 
     [Install]
     WantedBy=local.target
