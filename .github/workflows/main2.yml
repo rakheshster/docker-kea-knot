@@ -68,7 +68,7 @@ jobs:
         id: cache
         with:
           # Where to store the cache
-          path: /tmp/.buildx-cache
+          path: /build-cache
           # The key created when saving a cache and the key used to search for a cache.
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           #  An ordered list of alternative keys to use for finding the cache if no cache hit occurred for key.
@@ -88,8 +88,8 @@ jobs:
           --output "type=image,push=false" \
           --tag ${IMAGENAME}:${VERSION}-debian \
           --file ${GITHUB_WORKSPACE}/Dockerfile.debian \
-          --cache-from "type=local,src=/tmp/.buildx-cache" \
-          --cache-to "type=local,dest=/tmp/.buildx-cache" ./
+          --cache-from "type=local,src=/build-cache" \
+          --cache-to "type=local,dest=/build-cache" ./
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -109,7 +109,7 @@ jobs:
           --output "type=image,push=true" \
           --tag ${IMAGENAME}:${VERSION}-debian \
           --file ${GITHUB_WORKSPACE}/Dockerfile.debian \
-          --cache-from "type=local,src=/tmp/.buildx-cache" ./
+          --cache-from "type=local,src=/build-cache" ./
 
       - name: Inspect image
         if: always() && github.event_name != 'pull_request'
