@@ -138,8 +138,18 @@ Copy this file to `/etc/systemd/system/`.
 Enable it in systemd via: `sudo systemctl enable <service file name>`.
 
 # Thanks!
+If you have read till here, thanks! I hope this image is of use to you. :) 
+
 Creating this image was a terrific learning experience for me. 
 
-I reworked my [stubby-unbound](https://github.com/rakheshster/docker-stubby-unbound) and [stubby-dnsmasq](https://github.com/rakheshster/docker-stubby-dnsmasq) images based on the learnings from this one. With each image I have delved more and more into Docker. I got into Docker with the stubby-unbound image, but with the stubby-dnsmasq image I picked up multi-stage builds while with the kea-knot container I picked up multi-arch builds, got more into the mindset of Docker of having multiple layers and leveraging these (e.g creating a common [alpine-s6](https://github.com/rakheshster/docker-alpine-s6) & [debian-s6](https://github.com/rakheshster/docker-debian-s6) image to use across my containers), started publishing to Docker Hub, and spent a lot of time with GitHub actions and Azure DevOps pipelines to build this container (it took ages on my home machine for a single architecture so it was time leverage the cloud and some automation) and setting up self-hosted runners in Azure (because GitHub hosted runners have a time limit of 6 hours and this one takes 8-17 hours!)(the ARM template for that can be found [in this repo](https://github.com/rakheshster/github-runner-on-ubuntu)). This was thus a fun exercise in that I had an itch to stratch and I went crazy with it and learnt a lot of new things. Funnily enough as of this writing I haven't yet gone "live" with this container at home because I got side-tracked in all these other areas!
+I reworked my [stubby-unbound](https://github.com/rakheshster/docker-stubby-unbound) and [stubby-dnsmasq](https://github.com/rakheshster/docker-stubby-dnsmasq) images based on the learnings from this one. With each image I have delved more and more into Docker. 
 
-If you have read till here, thanks! I hope this image is of use to you. :)
+  * I got into Docker with the stubby-unbound image, but with the stubby-dnsmasq image I picked up multi-stage builds.
+  * With the kea-knot container I picked up:
+    * multi-arch builds, 
+    * got more into the mindset of Docker of having multiple layers and leveraging these (e.g creating a common [alpine-s6](https://github.com/rakheshster/docker-alpine-s6) & [debian-s6](https://github.com/rakheshster/docker-debian-s6) image to use across my containers), 
+    * started publishing to Docker Hub, 
+    * spent a lot of time with GitHub actions to build & publish this image (it took ages on my home machine for a single architecture so it was time leverage the cloud and some automation),  
+    * and Azure DevOps pipelines & ARM templates to setup self-hosted runners in Azure (because GitHub hosted runners have a time limit of 6 hours and this one takes 8-17 hours!)(the ARM template for the runner can be found [in this repo](https://github.com/rakheshster/github-runner-on-ubuntu)). 
+
+This was thus a fun exercise in that I had an itch to stratch and I went crazy with it and learnt a lot of new things. Funnily enough as of this writing I haven't yet gone "live" with this container at home because I got side-tracked in all these other areas.
