@@ -72,7 +72,7 @@ FROM mybase AS alpineruntime
 
 # Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
-# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv luajit lmdb gnutls userspace-rcu libedit libidn2
+# Knot: libuv luajit lmdb gnutls userspace-rcu libedit libidn2
 RUN apk add --update --no-cache ca-certificates \
     drill \
     openssl log4cplus boost \
@@ -87,10 +87,6 @@ COPY --from=alpinekea /usr/local/ /
 RUN addgroup -S knot && adduser -D -S knot -G knot
 RUN mkdir -p /var/lib/knot && chown knot:knot /var/lib/knot
 RUN mkdir -p /var/run/knot && chown knot:knot /var/run/knot
-
-RUN addgroup -S knot-res && adduser -D -S knot-res -G knot-res
-RUN mkdir -p /var/lib/knot-resolver && chown knot-res:knot-res /var/lib/knot-resolver
-RUN mkdir -p /var/cache/knot-resolver && chown knot-res:knot-res /var/cache/knot-resolver
 
 ################################### FINALIZE ####################################
 # This pulls in the previous stage, adds S6. This is my final stage. 

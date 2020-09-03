@@ -73,7 +73,7 @@ FROM mybase AS debianruntime
 
 # Get the runtimes deps for all
 # Kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/intro.html#required-software)
-# Knot: (https://knot-resolver.readthedocs.io/en/latest/build.html) libuv1 libluajit-5.1-2 liblmdb0 gnutls-bin liburcu6 libedit2 libidn2-0 fstrm-bin protobuf-c-compiler
+# Knot: libuv1 libluajit-5.1-2 liblmdb0 gnutls-bin liburcu6 libedit2 libidn2-0 fstrm-bin protobuf-c-compiler
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     dnsutils \
     openssl liblog4cplus-1.1-9 libboost-dev libboost-system-dev \
@@ -89,10 +89,6 @@ COPY --from=debiankea /usr/local/ /
 RUN addgroup --system knot && adduser --system knot --ingroup knot
 RUN mkdir -p /var/lib/knot && chown knot:knot /var/lib/knot
 RUN mkdir -p /var/run/knot && chown knot:knot /var/run/knot
-
-RUN addgroup --system knot-res && adduser --system knot-res --ingroup knot-res
-RUN mkdir -p /var/lib/knot-resolver && chown knot-res:knot-res /var/lib/knot-resolver
-RUN mkdir -p /var/cache/knot-resolver && chown knot-res:knot-res /var/cache/knot-resolver
 
 ################################### FINALIZE ####################################
 # This pulls in the previous stage, adds S6. This is my final stage. 
