@@ -44,7 +44,6 @@ KEA_LEASES=${NAME}_kealeases && docker volume create $KEA_LEASES
 # run the container
 docker create --name "$NAME" \
     -P --network="$NETWORK" \
-    --dns 127.0.0.1 \
     --restart=unless-stopped \
     --cap-add=NET_ADMIN \
     -e TZ="Europe/London" \
