@@ -16,11 +16,11 @@ LABEL maintainer="Rakhesh Sasidharan"
 # Get the build-dependencies for everything I plan on building later
 # common stuff: git build-base libtool xz cmake
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
-# knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
+# knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev lmdb-dev
 RUN apk add --update --no-cache \
     git build-base libtool xz cmake \
     openssl-dev boost-dev log4cplus-dev automake \
-    pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev
+    pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev lmdb-dev
 RUN rm -rf /var/cache/apk/*
 
 ################################## KEA DHCP ####################################
