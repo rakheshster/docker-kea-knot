@@ -1,6 +1,6 @@
 # I am pulling in my alpine-s6 image as the base here so I can reuse it for the common buildimage and later in the runtime. 
 # Initially I used to pull this separately at each stage but that gave errors with docker buildx for the BASE_VERSION argument.
-ARG BASE_VERSION=3.12-2.0.0.1
+ARG BASE_VERSION=3.12-2.1.0.2
 FROM rakheshster/alpine-s6:${BASE_VERSION} AS mybase
 
 ################################### COMMON BUILDIMAGE ####################################
@@ -28,7 +28,7 @@ RUN rm -rf /var/cache/apk/*
 FROM alpinebuild AS alpinekea
 
 # ENV KEA_VERSION 1.7.10
-ENV KEA_VERSION 1.8.0
+ENV KEA_VERSION 1.8.1
 
 LABEL stage="alpinekea"
 LABEL maintainer="Rakhesh Sasidharan"
@@ -50,7 +50,7 @@ RUN chmod -x /usr/local/sbin/keactrl
 # This image is to only build Knot DNS
 FROM alpinebuild AS alpineknot
 
-ENV KNOTDNS_VERSION 2.9.5
+ENV KNOTDNS_VERSION 3.0.2
 
 LABEL stage="alpineknot"
 LABEL maintainer="Rakhesh Sasidharan"
