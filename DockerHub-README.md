@@ -23,9 +23,13 @@ The `Dockerfile` can be found in the [GitHub repository](https://github.com/rakh
 
 # Running this
 ## Data
-Knot has 1) its config file at `/etc/knot` and 2) stores its zones database at `/var/lib/knot/zones`. The latter is where we store our zones but these can be dynamically updated by Knot due to Dynamic DNS or DNSSEC, hence the location of `/var/lib` to store them. 
+Knot has: 
+  1. its config file at `/etc/knot`, and 
+  2. stores its zones database at `/var/lib/knot/zones` (this is where we store our zones but these can be dynamically updated by Knot due to Dynamic DNS or DNSSEC, hence the location of `/var/lib`). 
 
-Kea has 1) its config file at `/etc/kea` and 2) store its leases at `/var/lib/kea`. There are multiple config files for each Kea service. 
+Kea has:
+  1. its config file at `/etc/kea`, and 
+  2. stores its leases at `/var/lib/kea`. There are multiple config files for each Kea service. 
 
 I would recommend making Docker volumes for each of these locations and mapping them to the container. You don't need to keep the leases or zone DBs out of the container, but I prefer it that way. The way I run it at home is thus:
 
@@ -33,7 +37,7 @@ I would recommend making Docker volumes for each of these locations and mapping 
 # name of the container; also used as a prefix for the volumes
 NAME="kea-knot"
 NETWORK="my_docker_network"
-IMAGE="rakheshster/kea-knot:1.8.0-2.9.5-1"
+IMAGE="rakheshster/kea-knot:1.8.0-2.9.5-3"
 
 # create Docker volumes to store data
 KNOT_CONFIG=${NAME}_knotconfig && docker volume create $KNOT_CONFIG
@@ -54,7 +58,17 @@ docker create --name "$NAME" \
     $IMAGE
 ```
 
-On my [GitHub repository](https://github.com/rakheshster/docker-kea-knot) there's a script which does this and also outputs a systemd service unit file so the container is automatically launched by systemd as a service. 
+On my [GitHub repository](https://github.com/rakheshster/docker-kea-knot) there's a [script](https://raw.githubusercontent.com/rakheshster/docker-kea-knot/master/createcontainer.sh) which does this and also outputs a systemd service unit file so the container is automatically launched by systemd as a service. 
+
+Here's an example of what you could do (this uses a macvlan network I created prior called `my_macvlan_network` and assigns the container an IP address of 192.168.0.1):
+
+```shell
+# get the script, make it executable, and run it. this saves the script to the $(pwd) so use a different path if needed
+curl -O -s -L https://raw.githubusercontent.com/rakheshster/docker-kea-knot/master/createcontainer.sh
+chmod +x ./createcontainer.sh
+
+./createcontainer.sh rakheshster/kea-knot:1.8.0-2.9.5-3 kea-knot 192.168.0.1 my_macvlan_network
+```
 
 The timezone variable in the `docker run` command is useful so Kea & Knot set timestamps correctly. Also, Kea needs the `NET_ADMIN` capability as it is a DHCP server and needs to listen to broadcasts. I like to have a macvlan network with a separate IP for this container, but that's just my preference. 
 
@@ -86,7 +100,7 @@ zonefile-load: difference-no-serial
 journal-content: changes
 ```
 
-Do refer to the Knot documentation for more info though. I am no Knot expert and the above is just what I use at home. 
+Do refer to the Knot documentation for more info though. I decided to go with the zone file being overwritten.  
 
 # Reloading
 If you want to reload Knot or Kea I provide some useful wrapper scripts. These simply use `s6` to reload the appropriate service. To reload Knot for instance, do:
@@ -122,6 +136,27 @@ WantedBy=local.target
 Copy this file to `/etc/systemd/system/`. 
 
 Enable it in systemd via: `sudo systemctl enable <service file name>`.
+
+# Updating
+Here's what I do at home to update the container. This is just my way of doing things for my environment of course:
+
+```shell
+# get the latest version
+docker pull rakheshster/kea-knot:1.8.0-2.9.5-3
+
+# get my script as before
+curl -O -s -L https://raw.githubusercontent.com/rakheshster/docker-kea-knot/master/createcontainer.sh
+chmod +x ./createcontainer.sh
+
+# remove the existing container, called kea-knot
+docker rm -f kea-knot
+
+# make a new container, called kea-knot, with an IP and network etc. 
+./createcontainer.sh rakheshster/kea-knot:1.8.0-2.9.5-3 kea-knot 192.168.0.1 my_macvlan_network
+
+# start it
+docker start kea-knot
+```
 
 # Thanks!
 If you have read till here, thanks! I hope this image is of use to you. :)
