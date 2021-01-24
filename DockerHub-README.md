@@ -11,12 +11,12 @@ Neither Kea nor DHCP server provide DNS resolution for its clients, so I needed 
 ISC provides packages for Kea but they are for the x64 architecture whereas I want them for the arm/ arm64 architecture. Hence I have to compile Kea anyways and I figure I might as well containeraize it. 
 
 # Debian and Alpine?
-Initially I based this image on Alpine but I quickly realised that Kea takes ages to compile on it. If I do a `docker builds build` multi arch build for instance, it takes a whooping 17 hours! The same on a Debian based image is only 8 hours. Nearly half. 
+Initially I based this image on Alpine but I quickly realised that Kea takes ages to compile on it. A `docker builds build` multi arch build takes a whooping 17 hours while the same on a Debian based image is only 8 hours. I have no idea why this is the case. Maybe it's because Alpine uses `musl` while Debian uses `glibc` for the C libraries? Since I had put in the effort for Alpine initially I decided to keep it around as the default but also add the Debian one as an alternative. Hence the additional `Dockerfile.debian` and two set of Docker images. I figure for the end user the compile times don't matter as it's just a simple download after all (both images are less than 300 MB in compressed size). 
 
-I have no idea why this is the case. Maybe it's because Alpine uses `musl` while Debian uses `glibc` for the C libraries? Since I had put in the effort for Alpine initially I decided to keep it around as the default but also add the Debian one as an alternative. Hence the additional `Dockerfile.debian` and two set of Docker images. I figure for the end user the compile times don't matter as it's just a simple download after all (both images are less than 300 MB in compressed size). 
+*Update*: Once I switched from Kea 1.7 to 1.8 the Alpine version too buids as fast as the Debian version. I have now stopped publishing the Debian version but I'll keep the `Dockerfile` up to date (no guarantees I'll have tested it though so some things might be broken).
 
 # Versions
-Version numbers are of the format `<kea version>-<knot version>-<patch>` and optionally have a `-debian` suffix for the Debian variant. 
+Version numbers are of the format `<kea version>-<knot version>-<patch>` ~~and optionally have a `-debian` suffix for the Debian variant~~. 
 
 # Source
 The `Dockerfile` can be found in the [GitHub repository](https://github.com/rakheshster/docker-kea-knot). 
