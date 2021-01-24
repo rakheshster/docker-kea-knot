@@ -22,7 +22,7 @@ Initially I based this image on Alpine but I quickly realised that Kea takes age
 ## Getting this
 It is best to target a specific release when pulling this repo. Either switch to the correct tag after downloading, or download a zip of the latest release from the [Releases](https://github.com/rakheshster/docker-kea-knot/releases) page. In the interest of speed however, as mentioned above I'd suggest downloading the built image from Docker Hub at [rakheshster/kea-knot](https://hub.docker.com/repository/docker/rakheshster/kea-knot).
 
-The version numbers are of the format `<kea version>-<knot version>-<patch>` and optionally have a `-debian` suffix for the Debian variant. 
+The version numbers are of the format `<kea version>-<knot version>-<patch>`. ~~and optionally have a `-debian` suffix for the Debian variant~~
 
 I will update the `<patch>` number when there's any change introduced by me (e.g. a change to the Dockerfile or the base image).
 
