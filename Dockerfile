@@ -1,6 +1,6 @@
 # I am pulling in my alpine-s6 image as the base here so I can reuse it for the common buildimage and later in the runtime. 
 # Initially I used to pull this separately at each stage but that gave errors with docker buildx for the BASE_VERSION argument.
-ARG BASE_VERSION=3.12-2.1.0.2
+ARG BASE_VERSION=3.13-2.2.0.1
 FROM rakheshster/alpine-s6:${BASE_VERSION} AS mybase
 
 ################################### COMMON BUILDIMAGE ####################################
@@ -14,27 +14,34 @@ LABEL stage="alpinebuild"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Get the build-dependencies for everything I plan on building later
-# common stuff: git build-base libtool xz cmake
+# common stuff: git build-base libtool xz cmake gnupg (to verify)
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-base libtool openssl-dev boost-dev log4cplus-dev automake
 # knot dns: pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev lmdb-dev
 RUN apk add --update --no-cache \
-    git build-base libtool xz cmake \
+    git build-base libtool xz cmake gnupg \
     openssl-dev boost-dev log4cplus-dev automake \
     pkgconf gnutls-dev userspace-rcu-dev libedit-dev libidn2-dev fstrm-dev protobuf-c-dev lmdb-dev
 RUN rm -rf /var/cache/apk/*
 
 ################################## KEA DHCP ####################################
-# This image is to only build Kea Dhcp
+# This image is to only build Kea DHCP
 FROM alpinebuild AS alpinekea
 
 # ENV KEA_VERSION 1.7.10
-ENV KEA_VERSION 1.8.1
+ENV KEA_VERSION 1.8.2
 
 LABEL stage="alpinekea"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Download the source & build it
 ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz /tmp/
+ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz.asc /tmp/
+# Import the PGP key used by ISC (https://kb.isc.org/docs/aa-01225)
+RUN gpg --recv-keys 0x156890685EA0DF6A1371EF2017CC5DB1F0088407
+# Verify the download (exit if it fails)
+RUN gpg --status-fd 1 --verify /tmp/kea-${KEA_VERSION}.tar.gz.asc /tmp/kea-${KEA_VERSION}.tar.gz 2>/dev/null | grep -q "GOODSIG 17CC5DB1F0088407" \
+    || exit 1
+
 WORKDIR /src
 RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
 WORKDIR /src/kea-${KEA_VERSION}
@@ -50,13 +57,20 @@ RUN chmod -x /usr/local/sbin/keactrl
 # This image is to only build Knot DNS
 FROM alpinebuild AS alpineknot
 
-ENV KNOTDNS_VERSION 3.0.2
+ENV KNOTDNS_VERSION 3.0.4
 
 LABEL stage="alpineknot"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Download the source & build it
 ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz /tmp/
+ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz.asc /tmp/
+# Import the PGP key used by cz.nic (https://www.knot-dns.cz/download/)
+RUN gpg --recv-keys 0x10BB7AF6FEBBD6AB
+# Verify the download (exit if it fails)
+RUN gpg --status-fd 1 --verify /tmp/knot-${KNOTDNS_VERSION}.tar.xz.asc /tmp/knot-${KNOTDNS_VERSION}.tar.xz 2>/dev/null | grep -q "GOODSIG 10BB7AF6FEBBD6AB" \
+    || exit 1
+
 WORKDIR /src
 RUN tar xf /tmp/knot-${KNOTDNS_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-${KNOTDNS_VERSION}

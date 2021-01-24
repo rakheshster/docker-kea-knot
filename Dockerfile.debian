@@ -1,6 +1,6 @@
 # I am pulling in my debian-s6 image as the base here so I can reuse it for the common buildimage and later in the runtime. 
 # Initially I used to pull this separately at each stage but that gave errors with docker buildx for the BASE_VERSION argument.
-ARG BASE_VERSION=buster-2.1.0.2
+ARG BASE_VERSION=buster-2.2.0.1
 FROM rakheshster/debian-s6:${BASE_VERSION} AS mybase
 
 ################################### COMMON BUILDIMAGE ####################################
@@ -14,28 +14,35 @@ LABEL stage="debianbuild"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Get the build-dependencies for everything I plan on building later
-# common stuff: git build-base libtool xz cmake
+# common stuff: git build-base libtool xz cmake gnupg (to verify)
 # kea: (https://kea.readthedocs.io/en/kea-1.6.2/arm/install.html#build-requirements) build-essential libtool libssl-dev openssl libboost-system-dev libboost-dev liblog4cplus-dev automake
 # knot dns: pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev protobuf-c-compiler libprotobuf-c-dev liblmdb-dev
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git build-essential libtool xz-utils cmake \
+    git build-essential libtool xz-utils cmake gnupg \
     libssl-dev openssl libboost-dev libboost-system-dev liblog4cplus-dev automake \
     pkgconf libgnutls28-dev liburcu-dev libedit-dev libidn2-dev libfstrm-dev protobuf-c-compiler libprotobuf-c-dev liblmdb-dev
 RUN apt-get -y clean
 RUN rm -rf /var/lib/apt/lists/*
 
 ################################## KEA DHCP ####################################
-# This image is to only build Kea Dhcp
+# This image is to only build Kea DHCP
 FROM debianbuild AS debiankea
 
 # ENV KEA_VERSION 1.7.10
-ENV KEA_VERSION 1.8.1
+ENV KEA_VERSION 1.8.2
 
 LABEL stage="debiankea"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Download the source & build it
 ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz /tmp/
+ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz.asc /tmp/
+# Import the PGP key used by ISC (https://kb.isc.org/docs/aa-01225)
+RUN gpg --recv-keys 0x156890685EA0DF6A1371EF2017CC5DB1F0088407
+# Verify the download (exit if it fails)
+RUN gpg --status-fd 1 --verify /tmp/kea-${KEA_VERSION}.tar.gz.asc /tmp/kea-${KEA_VERSION}.tar.gz 2>/dev/null | grep -q "GOODSIG 17CC5DB1F0088407" \
+    || exit 1
+
 WORKDIR /src
 RUN tar xzf /tmp/kea-${KEA_VERSION}.tar.gz -C ./
 WORKDIR /src/kea-${KEA_VERSION}
@@ -51,13 +58,20 @@ RUN chmod -x /usr/local/sbin/keactrl
 # This image is to only build Knot DNS
 FROM debianbuild AS debianknot
 
-ENV KNOTDNS_VERSION 3.0.2
+ENV KNOTDNS_VERSION 3.0.4
 
 LABEL stage="debianknot"
 LABEL maintainer="Rakhesh Sasidharan"
 
 # Download the source & build it
 ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz /tmp/
+ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz.asc /tmp/
+# Import the PGP key used by cz.nic (https://www.knot-dns.cz/download/)
+RUN gpg --recv-keys 0x10BB7AF6FEBBD6AB
+# Verify the download (exit if it fails)
+RUN gpg --status-fd 1 --verify /tmp/knot-${KNOTDNS_VERSION}.tar.xz.asc /tmp/knot-${KNOTDNS_VERSION}.tar.xz 2>/dev/null | grep -q "GOODSIG 10BB7AF6FEBBD6AB" \
+    || exit 1
+
 WORKDIR /src
 RUN tar xf /tmp/knot-${KNOTDNS_VERSION}.tar.xz -C ./
 WORKDIR /src/knot-${KNOTDNS_VERSION}
