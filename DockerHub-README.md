@@ -16,7 +16,7 @@ Initially I based this image on Alpine but I quickly realised that Kea takes age
 *Update*: Once I switched from Kea 1.7 to 1.8 the Alpine version too buids as fast as the Debian version. I have now stopped publishing the Debian version but I'll keep the `Dockerfile` up to date (no guarantees I'll have tested it though so some things might be broken).
 
 # Versions
-Version numbers are of the format `<kea version>-<knot version>-<patch>` ~~and optionally have a `-debian` suffix for the Debian variant~~. 
+Version numbers are of the format `<kea version>-<knot version>-<patch>`. ~~and optionally have a `-debian` suffix for the Debian variant~~ 
 
 # Source
 The `Dockerfile` can be found in the [GitHub repository](https://github.com/rakheshster/docker-kea-knot). 
