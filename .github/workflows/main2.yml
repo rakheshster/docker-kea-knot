@@ -96,6 +96,7 @@ jobs:
           --platform $PLATFORMS \
           --output "type=image,push=false" \
           --tag ${IMAGENAME}:${VERSION}-debian \
+          --tag ${IMAGENAME}:latest-debian \
           --file ${GITHUB_WORKSPACE}/Dockerfile.debian \
           --cache-from "type=local,src=/build-cache" \
           --cache-to "type=local,dest=/build-cache" ./
@@ -118,6 +119,7 @@ jobs:
           --platform $PLATFORMS \
           --output "type=image,push=true" \
           --tag ${IMAGENAME}:${VERSION}-debian \
+          --tag ${IMAGENAME}:latest-debian \
           --file ${GITHUB_WORKSPACE}/Dockerfile.debian \
           --cache-from "type=local,src=/build-cache" ./
 

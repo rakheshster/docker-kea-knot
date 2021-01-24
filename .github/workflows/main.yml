@@ -96,6 +96,7 @@ jobs:
             --platform $PLATFORMS \
             --output "type=image,push=false" \
             --tag ${IMAGENAME}:${VERSION} \
+            --tag ${IMAGENAME}:latest \
             --cache-from "type=local,src=/build-cache" \
             --cache-to "type=local,dest=/build-cache" ./
 
@@ -117,6 +118,7 @@ jobs:
           --platform $PLATFORMS \
           --output "type=image,push=true" \
           --tag ${IMAGENAME}:${VERSION} \
+          --tag ${IMAGENAME}:latest \
           --cache-from "type=local,src=/build-cache" ./
 
       - name: Inspect image
