@@ -37,8 +37,8 @@ LABEL maintainer="Rakhesh Sasidharan"
 ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz /tmp/
 ADD https://downloads.isc.org/isc/kea/${KEA_VERSION}/kea-${KEA_VERSION}.tar.gz.asc /tmp/
 # Import the PGP key used by ISC (https://www.isc.org/pgpkey/; get from https://downloads.isc.org/isc/pgpkeys/)
-# Note to self: Using gpg --recv-keys fails for this key; see https://superuser.com/questions/1485213/gpg-cant-import-key-new-key-but-contains-no-user-id-skipped
-# Workaround is to use the Ubuntu key server
+# Note to self: Using gpg --recv-keys fails for this key on the Debian version of gpg; see https://superuser.com/questions/1485213/gpg-cant-import-key-new-key-but-contains-no-user-id-skipped
+# Workaround is to use the Ubuntu key server or download the key directly and import. 
 # RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 0x156890685EA0DF6A1371EF2017CC5DB1F0088407
 RUN wget -qO - https://downloads.isc.org/isc/pgpkeys/codesign2021.txt | gpg --import
 # Verify the download (exit if it fails)
