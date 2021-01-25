@@ -70,7 +70,8 @@ LABEL maintainer="Rakhesh Sasidharan"
 ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz /tmp/
 ADD https://secure.nic.cz/files/knot-dns/knot-${KNOTDNS_VERSION}.tar.xz.asc /tmp/
 # Import the PGP key used by cz.nic (https://www.knot-dns.cz/download/)
-RUN gpg --recv-keys 0x10BB7AF6FEBBD6AB
+# As above, the import fails on Debian if I download from the default keys.openpgp.org server so use keyserver.ubuntu.com instead
+RUN gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 0x10BB7AF6FEBBD6AB
 # Verify the download (exit if it fails)
 RUN gpg --status-fd 1 --verify /tmp/knot-${KNOTDNS_VERSION}.tar.xz.asc /tmp/knot-${KNOTDNS_VERSION}.tar.xz 2>/dev/null | grep -q "GOODSIG 10BB7AF6FEBBD6AB" \
     || exit 1
