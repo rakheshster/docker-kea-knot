@@ -17,12 +17,12 @@ ISC provides packages for Kea but they are for the x64 architecture whereas I wa
 ## Debian and Alpine?
 Initially I based this image on Alpine but I quickly realised that Kea takes ages to compile on it. A `docker builds build` multi arch build takes a whooping 17 hours while the same on a Debian based image is only 8 hours. I have no idea why this is the case. Maybe it's because Alpine uses `musl` while Debian uses `glibc` for the C libraries? Since I had put in the effort for Alpine initially I decided to keep it around as the default but also add the Debian one as an alternative. Hence the additional `Dockerfile.debian` and two set of Docker images. I figure for the end user the compile times don't matter as it's just a simple download after all (both images are less than 300 MB in compressed size). 
 
-*Update*: Once I switched from Kea 1.7 to 1.8 the Alpine version too buids as fast as the Debian version. I have now stopped publishing the Debian version but I'll keep the `Dockerfile` up to date (no guarantees I'll have tested it though so some things might be broken).
+*Update*: Once I switched from Kea 1.7 to 1.8 the Alpine version too buids as fast as the Debian version. Both take about 9 hours now. 
 
 ## Getting this
 It is best to target a specific release when pulling this repo. Either switch to the correct tag after downloading, or download a zip of the latest release from the [Releases](https://github.com/rakheshster/docker-kea-knot/releases) page. In the interest of speed however, as mentioned above I'd suggest downloading the built image from Docker Hub at [rakheshster/kea-knot](https://hub.docker.com/repository/docker/rakheshster/kea-knot).
 
-The version numbers are of the format `<kea version>-<knot version>-<patch>`. ~~and optionally have a `-debian` suffix for the Debian variant~~
+Version numbers are of the format `<kea version>-<knot version>-<patch>` and have a `-debian` suffix for the Debian variant.
 
 I will update the `<patch>` number when there's any change introduced by me (e.g. a change to the Dockerfile or the base image).
 
