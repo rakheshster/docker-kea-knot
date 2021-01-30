@@ -1,5 +1,5 @@
 # This is the name of the workflow
-name: Buildx & Push [Debian]
+name: Docker Build & Push [Debian]
 
 # When it runs
 on:
@@ -119,6 +119,10 @@ jobs:
 
       - name: Build and push
         uses: docker/build-push-action@v2
+        env:
+          # read these variables from the JSON file I inputted in an earlier step and define for use in this step
+          IMAGENAME: ${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}
+          VERSION: ${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}
         with:
           context: .
           file: ./Dockerfile-debian
@@ -127,10 +131,10 @@ jobs:
           cache-from: type=local,src=/build-cache
           cache-to: type=local,dest=/build-cache
           tags: |
-            ${IMAGENAME}:${VERSION}-debian
-            ${IMAGENAME}:latest-debian
-            ghcr.io/${IMAGENAME}:${VERSION}-debian
-            ghcr.io/${IMAGENAME}:latest-debian
+            ${{ env.IMAGENAME }}:${{ env.VERSION }}-debian
+            ${{ env.IMAGENAME }}:${{ env.VERSION }}:latest-debian
+            ghcr.io/${{ env.IMAGENAME }}:${{ env.VERSION }}-debian
+            ghcr.io/${{ env.IMAGENAME }}:${{ env.VERSION }}:latest-debian
 
       # commenting this as out as I now build and push using an action.
       # - name: Docker Buildx (push)

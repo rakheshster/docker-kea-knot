@@ -1,6 +1,6 @@
 # Kea + Knot + Docker
-![Buildx & Push [Debian]](https://github.com/rakheshster/docker-kea-knot/workflows/Buildx%20&%20Push%20%5BDebian%5D/badge.svg)
-![Buildx & Push [Alpine]](https://github.com/rakheshster/docker-kea-knot/workflows/Buildx%20&%20Push%20%5BAlpine%5D/badge.svg)
+![Buildx & Push [Debian]](https://github.com/rakheshster/docker-kea-knot/workflows/Docker%20Build%20&%20Push%20%5BDebian%5D/badge.svg)
+![Buildx & Push [Alpine]](https://github.com/rakheshster/docker-kea-knot/workflows/Docker%20Build%20&%20Push%20%5BAlpine%5D/badge.svg)
 
 ## What is this?
 This is a Docker image containing [Kea (for DHCP)](https://www.isc.org/kea/) and [Knot DNS](https://www.knot-dns.cz/) (for authoritative DNS; *not* a resolver). 
