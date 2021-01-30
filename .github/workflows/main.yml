@@ -131,7 +131,7 @@ jobs:
           cache-to: type=local,dest=/build-cache
           tags: |
             ${{ env.IMAGENAME }}:${{ env.VERSION }}
-            ${{ env.IMAGENAME }}:${{ env.VERSION }}:latest
+            ${{ env.IMAGENAME }}:latest
             ghcr.io/${{ env.IMAGENAME }}:${{ env.VERSION }}
             ghcr.io/${{ env.IMAGENAME }}:latest
 

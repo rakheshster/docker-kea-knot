@@ -132,9 +132,9 @@ jobs:
           cache-to: type=local,dest=/build-cache
           tags: |
             ${{ env.IMAGENAME }}:${{ env.VERSION }}-debian
-            ${{ env.IMAGENAME }}:${{ env.VERSION }}:latest-debian
+            ${{ env.IMAGENAME }}:latest-debian
             ghcr.io/${{ env.IMAGENAME }}:${{ env.VERSION }}-debian
-            ghcr.io/${{ env.IMAGENAME }}:${{ env.VERSION }}:latest-debian
+            ghcr.io/${{ env.IMAGENAME }}:latest-debian
 
       # commenting this as out as I now build and push using an action.
       # - name: Docker Buildx (push)
