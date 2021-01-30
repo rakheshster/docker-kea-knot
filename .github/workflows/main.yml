@@ -87,18 +87,19 @@ jobs:
           # When key doesn't match an existing cache, it's called a cache miss, and a new cache is created if the job completes successfully. 
           # When a cache miss occurs, the action searches for alternate keys called restore-keys.
 
-      - name: Docker Buildx (build)
-        run: |
-          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
-          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+      # commenting this as out as I now build and push using an action
+      # - name: Docker Buildx (build)
+      #   run: |
+      #     IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
+      #     VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx build \
-            --platform $PLATFORMS \
-            --output "type=image,push=false" \
-            --tag ${IMAGENAME}:${VERSION} \
-            --tag ${IMAGENAME}:latest \
-            --cache-from "type=local,src=/build-cache" \
-            --cache-to "type=local,dest=/build-cache" ./
+      #     docker buildx build \
+      #       --platform $PLATFORMS \
+      #       --output "type=image,push=false" \
+      #       --tag ${IMAGENAME}:${VERSION} \
+      #       --tag ${IMAGENAME}:latest \
+      #       --cache-from "type=local,src=/build-cache" \
+      #       --cache-to "type=local,dest=/build-cache" ./
 
       - name: Login to Docker Hub
         if: success() && github.event_name != 'pull_request'
@@ -108,23 +109,46 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }} 
 
-      - name: Docker Buildx (push)
-        if: success() && github.event_name != 'pull_request'
-        run: |
-          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
-          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1 
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
 
-          docker buildx build \
-          --platform $PLATFORMS \
-          --output "type=image,push=true" \
-          --tag ${IMAGENAME}:${VERSION} \
-          --tag ${IMAGENAME}:latest \
-          --cache-from "type=local,src=/build-cache" ./
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${PLATFORMS}
+          push: true
+          cache-from: type=local,src=/build-cache
+          cache-to: type=local,dest=/build-cache
+          tags: |
+            ${IMAGENAME}:${VERSION}
+            ${IMAGENAME}:latest
+            ghcr.io/${IMAGENAME}:${VERSION}
+            ghcr.io/${IMAGENAME}:latest
 
-      - name: Inspect image
-        if: always() && github.event_name != 'pull_request'
-        run: |
-          IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
-          VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+      # commenting this as out as I now build and push using an action.
+      # - name: Docker Buildx (push)
+      #   if: success() && github.event_name != 'pull_request'
+      #   run: |
+      #     IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
+      #     VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
 
-          docker buildx imagetools inspect ${IMAGENAME}:${VERSION}
+      #     docker buildx build \
+      #     --platform $PLATFORMS \
+      #     --output "type=image,push=true" \
+      #     --tag ${IMAGENAME}:${VERSION} \
+      #     --tag ${IMAGENAME}:latest \
+      #     --cache-from "type=local,src=/build-cache" ./
+
+      # - name: Inspect image
+      #   if: always() && github.event_name != 'pull_request'
+      #   run: |
+      #     IMAGENAME="${{ fromJson(steps.read_buildinfo.outputs.packageJson).imagename }}"
+      #     VERSION="${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}"
+
+      #     docker buildx imagetools inspect ${IMAGENAME}:${VERSION}
