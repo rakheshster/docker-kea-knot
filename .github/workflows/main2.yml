@@ -126,7 +126,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile-debian
-          platforms: ${PLATFORMS}
+          platforms: ${{ env.PLATFORMS }}
           push: true
           cache-from: type=local,src=/build-cache
           cache-to: type=local,dest=/build-cache
