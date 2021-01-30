@@ -111,6 +111,7 @@ RUN mkdir -p /var/run/knot && chown knot:knot /var/run/knot
 FROM alpineruntime
 
 LABEL maintainer="Rakhesh Sasidharan"
+LABEL org.opencontainers.image.source=https://github.com/rakheshster/docker-kea-knot
 
 # Copy the config files & s6 service files to the correct location
 COPY root/ /
