@@ -15,11 +15,17 @@ if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1
 VERSION=$(jq -r '.version' $BUILDINFO)
 IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
 
-docker buildx build --platform $ARCH -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest --progress=plain $(pwd)
+docker buildx build --platform $ARCH \
+    -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest \
+    -t ghcr.io/${IMAGENAME}:${VERSION} -t ghcr.io/${IMAGENAME}:latest \
+    --progress=plain $(pwd)
 
 echo ""
 echo "Loading the image of the current architecture (this could fail if I didn't specify it in the ARCH variable earlier)"
-docker buildx build --load -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest .
+docker buildx build --load \
+    -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest \
+    -t ghcr.io/${IMAGENAME}:${VERSION} -t ghcr.io/${IMAGENAME}:latest \
+    $(pwd)
 
 # See https://github.com/docker/buildx/issues/59 for the background of the --load switch above
 # You use --push on multi-platform and --load for single platform

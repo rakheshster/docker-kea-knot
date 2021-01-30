@@ -9,4 +9,7 @@ if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1
 VERSION=$(jq -r '.version' $BUILDINFO)
 IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
 
-docker build -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest $(pwd)
+docker build \ 
+    -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest \
+    -t ghcr.io/${IMAGENAME}:${VERSION} -t ghcr.io/${IMAGENAME}:latest \
+    $(pwd)

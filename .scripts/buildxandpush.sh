@@ -14,4 +14,7 @@ if ! command -v jq &> /dev/null; then echo "Cannot find jq. Exiting ..."; exit 1
 VERSION=$(jq -r '.version' $BUILDINFO)
 IMAGENAME=$(jq -r '.imagename' $BUILDINFO)
 
-docker buildx build --platform $ARCH -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest --progress=plain --push $(pwd)
+docker buildx build --platform $ARCH \
+    -t ${IMAGENAME}:${VERSION} -t ${IMAGENAME}:latest \
+    -t ghcr.io/${IMAGENAME}:${VERSION} -t ghcr.io/${IMAGENAME}:latest \
+    --progress=plain --push $(pwd)
