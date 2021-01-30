@@ -79,10 +79,13 @@ jobs:
           # Where to store the cache
           path: /build-cache
           # The key created when saving a cache and the key used to search for a cache.
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          #  An ordered list of alternative keys to use for finding the cache if no cache hit occurred for key.
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+          # I was doing the following initially but have changed it to not depend on the SHA any more as I'd keep the cache common for this workflow
+          # key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: $ {{ github.workflow }}
+          # An ordered list of alternative keys to use for finding the cache if no cache hit occurred for key.
+          # Not using this anymore either as the key is constant now
+          # restore-keys: |
+          #   ${{ runner.os }}-buildx-
           # When key matches an existing cache, it's called a cache hit, and the action restores the cached files to the path directory.
           # When key doesn't match an existing cache, it's called a cache miss, and a new cache is created if the job completes successfully. 
           # When a cache miss occurs, the action searches for alternate keys called restore-keys.
