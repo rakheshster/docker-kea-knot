@@ -128,7 +128,7 @@ jobs:
           VERSION: ${{ fromJson(steps.read_buildinfo.outputs.packageJson).version  }}
         with:
           context: .
-          file: ./Dockerfile-debian
+          file: ./Dockerfile.debian
           platforms: ${{ env.PLATFORMS }}
           push: true
           cache-from: type=local,src=/build-cache
