@@ -63,9 +63,9 @@ docker create --name "$NAME" \
     $IMAGE
 ```
 
-The `createcontainer.sh` script does exactly this. It creates the volumes and container as above and also outputs a systemd service unit file so the container is automatically launched by systemd as a service. The script does not start the container however, you can do that via `docker start <container name>`. 
+The `.scripts/createcontainer.sh` script does exactly this. It creates the volumes and container as above and also outputs a systemd service unit file so the container is automatically launched by systemd as a service. The script does not start the container however, you can do that via `docker start <container name>`. 
 
-The timezone variable in the `docker run` command is useful so Kea & Knot set timestamps correctly. Also, Kea needs the `NET_ADMIN` capability as it is a DHCP server and needs to listen to broadcasts. I like to have a macvlan network with a separate IP for this container, but that's just my preference. The `createcontainer.sh` lets you specify the IP address and network name and if none is specified it uses the "bridge" network. 
+The timezone variable in the `docker run` command is useful so Kea & Knot set timestamps correctly. Also, Kea needs the `NET_ADMIN` capability as it is a DHCP server and needs to listen to broadcasts. I like to have a macvlan network with a separate IP for this container, but that's just my preference. The `.scripts/createcontainer.sh` lets you specify the IP address and network name and if none is specified it uses the "bridge" network. 
 
 ## Knot zone editing
 The Knot documentation gives steps on how to edit the zone files safely. To make it easy I include a script called `vizone`. This is copied to the `/sbin` folder of the container. Simply do the following to edit a zone safely and have Knot reload. 

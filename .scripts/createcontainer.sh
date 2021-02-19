@@ -1,7 +1,7 @@
 #!/bin/bash
 # Usage ./createcontainer.sh <image name> <container name> [ip address] [network name]
 
-# if the first or second arguments are missing give a usage message and exit
+# If the first or second arguments are missing give a usage message and exit
 if [[ -z "$1" || -z "$2" ]]; then
     echo "Usage ./createcontainer.sh <image name> <container name> [ip address] [network name]"
     exit 1
@@ -17,10 +17,16 @@ else
     NAME=$2
 fi
 
-# create a docker volume for storing data. this is automatically named after the container plus a suffix. 
-UNBOUND_DATA=${NAME}_unbounddata && docker volume create $UNBOUND_DATA
-STUBBY_DATA=${NAME}_stubbydata && docker volume create $STUBBY_DATA
+# Create Docker volumes for storing data. This is automatically named after the container plus a suffix. 
+# Knot needs (1) Config dir /etc/knot (2) a place to store zones (these could get dynamically updated based on DNSSEC or DDNS)
+KNOT_CONFIG=${NAME}_knotconfig && docker volume create $KNOT_CONFIG
+KNOT_ZONES=${NAME}_knotzones && docker volume create $KNOT_ZONES
 
+# Kea needs (3) Config dir /etc/kea  and (4) a place to save the leases 
+KEA_CONFIG=${NAME}_keaconfig && docker volume create $KEA_CONFIG
+KEA_LEASES=${NAME}_kealeases && docker volume create $KEA_LEASES
+
+# Networking stuff
 if [[ -z "$4" ]]; then 
     # network name not specified, default to bridge
     NETWORK="bridge" 
@@ -33,29 +39,33 @@ else
     NETWORK=$4
 fi
 
+IP=$3
 if [[ -z "$3" ]]; then
     docker create --name "$NAME" \
         -P --network="$NETWORK" \
-        -e TZ="Europe/London" \
         --restart=unless-stopped \
-        --mount type=volume,source=$UNBOUND_DATA,target=/etc/unbound.d \
-        --mount type=volume,source=$STUBBY_DATA,target=/etc/stubby \
+        --cap-add=NET_ADMIN \
+        -e TZ="Europe/London" \
+        --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
+        --mount type=volume,source=$KNOT_ZONES,target=/var/lib/knot/zones \
+        --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
+        --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
         "$IMAGE"
 else
-    IP=$3
     docker create --name "$NAME" \
-        --ip="$IP" -P \
-        --network="$NETWORK" \
-        -e TZ="Europe/London" \
+        -P --network="$NETWORK" --ip=$IP \
         --restart=unless-stopped \
-        --mount type=volume,source=$UNBOUND_DATA,target=/etc/unbound.d \
-        --mount type=volume,source=$STUBBY_DATA,target=/etc/stubby \
+        --cap-add=NET_ADMIN \
+        -e TZ="Europe/London" \
+        --mount type=volume,source=$KNOT_CONFIG,target=/etc/knot \
+        --mount type=volume,source=$KNOT_ZONES,target=/var/lib/knot/zones \
+        --mount type=volume,source=$KEA_CONFIG,target=/etc/kea \
+        --mount type=volume,source=$KEA_LEASES,target=/var/lib/kea \
         "$IMAGE"
 fi
-# Note that the container already has a /etc/unbound.d folder which contains files copied in during the image build.
+# Note that the container already has /etc/knot et al. folders which contains files copied in during the image build.
 # When I create the docker volume above and map it to the container, if this volume is empty the files from within the container are copied over to it.
 # Subsequently the files from the volume are used in preference to the files in the image. 
-# Ditto for /etc/stubby. 
 
 # quit if the above step gave any error
 [[ $? -ne 0 ]] && exit 1
@@ -64,18 +74,18 @@ printf "\nTo start the container do: \n\tdocker start $NAME"
 
 printf "\n\nCreating ./${NAME}.service for systemd"
 cat <<EOF > $NAME.service
-    [Unit]
-    Description=Stubby Unbound Container
-    Requires=docker.service
-    After=docker.service
+[Unit]
+Description=Kea Knot Container
+Requires=docker.service
+After=docker.service
 
-    [Service]
-    Restart=on-abort
-    ExecStart=/usr/bin/docker start -a $NAME
-    ExecStop=/usr/bin/docker stop -t 2 $NAME
+[Service]
+Restart=on-abort
+ExecStart=/usr/bin/docker start -a $NAME
+ExecStop=/usr/bin/docker stop -t 2 $NAME
 
-    [Install]
-    WantedBy=local.target
+[Install]
+WantedBy=local.target
 EOF
 
 printf "\n\nDo the following to install this in systemd & enable:"
