@@ -1,6 +1,6 @@
 # I am pulling in my alpine-s6 image as the base here so I can reuse it for the common buildimage and later in the runtime. 
 # Initially I used to pull this separately at each stage but that gave errors with docker buildx for the BASE_VERSION argument.
-ARG BASE_VERSION=3.13-2.2.0.1
+ARG BASE_VERSION=3.13-2.2.0.3
 FROM rakheshster/alpine-s6:${BASE_VERSION} AS mybase
 
 ################################### COMMON BUILDIMAGE ####################################
