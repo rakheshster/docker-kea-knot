@@ -59,7 +59,7 @@ jobs:
         # Set up QEMU (https://github.com/docker/setup-qemu-action)
         # (this allows buildx to build for other platforms)
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
         id: buildx
